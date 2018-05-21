@@ -51,6 +51,7 @@ RUN ${YUM} -y install ${PACKAGES} ${EXTRA_PACKAGES} \\
 VOLUME ["\${SOURCES}", "\${OUTPUT}", "\${WORKSPACE}", "\${RPM_BUILD_DIR}"]
 
 ADD ./assets/build /usr/bin/build
+ADD ./assets/rpmlint.config /etc/rpmlint/custom.config
 
 CMD ["build"]
 EOF
