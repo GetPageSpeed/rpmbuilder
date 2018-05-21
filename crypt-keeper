@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DOCKER_REGISRY_USER=alectolytic
+DOCKER_REGISRY_USER=getpagespeed
 
 function generate() {
     SOURCES=${SOURCES-/sources}
