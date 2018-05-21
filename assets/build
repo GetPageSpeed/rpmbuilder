@@ -7,9 +7,10 @@ SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 WORKSPACE=${WORKSPACE-/workspace}
 
-RPM_BUILD_SOURCES=$(rpmbuild --eval '%{_sourcedir}')
-RPM_BUILD_RPMS=$(rpmbuild --eval '%{_rpmdir}')
-RPM_BUILD_SRPMS=$(rpmbuild --eval '%{_srcrpmdir}')
+# Use rpm instead of rpmbuild to avoid bad exit in EL6
+RPM_BUILD_SOURCES=$(rpm --eval '%{_sourcedir}')
+RPM_BUILD_RPMS=$(rpm --eval '%{_rpmdir}')
+RPM_BUILD_SRPMS=$(rpm --eval '%{_srcrpmdir}')
 
 # make a copy
 cp -R ${SOURCES}/* ${WORKSPACE}/.
