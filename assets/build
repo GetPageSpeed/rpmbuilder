@@ -26,6 +26,12 @@ BUILDDEP_CMD=yum-builddep
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
 
 for specFile in ${WORKSPACE}/*.spec; do
+
+  if [[ -n ${RPMLINT} ]]; then
+    # check the spec file for obvious errors using rpmlint
+    rpmlint $specFile
+  fi
+
   # install build requires
   ${BUILDDEP_CMD} -y $specFile
   spectool --sourcedir --get-files $specFile
