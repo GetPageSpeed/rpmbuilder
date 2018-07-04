@@ -24,6 +24,9 @@ function generate() {
     case "${DISTRO}" in
         centos|cloudrouter*centos)
             EXTRA_PACKAGES="epel-release";
+            if [ "$RELEASE" == "6" ]; then
+                EXTRA_PACKAGES="${EXTRA_PACKAGES} centos-release-scl"
+            fi
             ;;
         fedora)
             YUM="dnf";
