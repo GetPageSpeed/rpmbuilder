@@ -26,6 +26,8 @@ function generate() {
             EXTRA_PACKAGES="epel-release";
             if [ "$RELEASE" == "6" ]; then
                 EXTRA_PACKAGES="${EXTRA_PACKAGES} centos-release-scl"
+                # Should be in the .spec as well. Our build env isn't "clean OS" but we want faster builds!
+                AFTER_EXTRA_PACKAGES="devtoolset-7-gcc-c++ devtoolset-7-binutils"
             fi
             ;;
         fedora)
@@ -49,7 +51,7 @@ RUN ${YUM} -y install ${PACKAGES} ${EXTRA_PACKAGES} \\
     && mkdir -p \${SOURCES} \\
         \${WORKSPACE} \\
         \${OUTPUT} \\
-        \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} $(test "$AFTER_EXTRA_PACKAGES" && echo "&& yum -y install ${AFTER_EXTRA_PACKAGES}")
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}", "\${WORKSPACE}", "\${RPM_BUILD_DIR}"]
 
