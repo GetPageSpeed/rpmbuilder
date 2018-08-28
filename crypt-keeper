@@ -23,7 +23,7 @@ function generate() {
     PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
     case "${DISTRO}" in
         centos|cloudrouter*centos)
-            EXTRA_PACKAGES="epel-release";
+            EXTRA_PACKAGES="epel-release https://extras.getpagespeed.com/release-el${RELEASE}-latest.rpm";
             if [ "$RELEASE" == "6" ]; then
                 EXTRA_PACKAGES="${EXTRA_PACKAGES} centos-release-scl"
                 # Should be in the .spec as well. Our build env isn't "clean OS" but we want faster builds!
