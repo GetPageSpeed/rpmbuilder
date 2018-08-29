@@ -5,29 +5,31 @@ set -exo pipefail
 
 SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
-WORKSPACE=${WORKSPACE-/workspace}
 
 # Use rpm instead of rpmbuild to avoid bad exit in EL6
-RPM_BUILD_SOURCES=$(rpm --eval '%{_sourcedir}')
-RPM_BUILD_RPMS=$(rpm --eval '%{_rpmdir}')
-RPM_BUILD_SRPMS=$(rpm --eval '%{_srcrpmdir}')
+RPM_BUILD_SOURCES=$(runuser builder rpm --eval '%{_sourcedir}')
+RPM_BUILD_RPMS=$(runuser builder rpm --eval '%{_rpmdir}')
+RPM_BUILD_SRPMS=$(runuser builder rpm --eval '%{_srcrpmdir}')
+RPM_BUILD_SPECS=$(runuser builder rpm --eval '%{_specdir}'
 
-# make a copy
-cp -R ${SOURCES}/* ${WORKSPACE}/.
+echo $ RPM_BUILD_SPECS
+# copy any .spec filess to rpmbuild/SPECS directory
+find ${SOURCES} -mindepth 1 -maxdepth 1 -name "*.spec" \
+    -exec cp -R {} ${RPM_BUILD_SPECS}/. \;
 
-# fix permissions on working copy
-chown root:root ${WORKSPACE}/*
-
-# copy any non-spec files/dirs to source directory
-find ${WORKSPACE} -mindepth 1 -maxdepth 1 ! -name "*.spec" \
+# copy any non-spec files/dirs to rpmbuild/SOURCES directory
+find ${SOURCES} -mindepth 1 -maxdepth 1 ! -name "*.spec" \
     -exec cp -R {} ${RPM_BUILD_SOURCES}/. \;
+    
+# fix permissions on working copy
+chown builder:builder /home/builder/rpmbuild    
 
 # With SCLO repos in place, yum-builddep might resolve "BuildRequires: gcc" to devtoolset-4-gcc
 # In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
 BUILDDEP_CMD="yum-builddep"
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
 
-for specFile in ${WORKSPACE}/*.spec; do
+for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   if [[ -n ${RPMLINT} ]]; then
     # check the spec file for obvious errors using rpmlint
