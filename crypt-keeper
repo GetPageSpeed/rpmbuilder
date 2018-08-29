@@ -49,15 +49,14 @@ ENV WORKSPACE=${WORKSPACE} \\
     OUTPUT=${OUTPUT} \\
     RPM_BUILD_DIR=${RPM_BUILD_DIR}
 
+RUN useradd builder -G wheel
 RUN ${YUM} -y install ${PACKAGES} ${EXTRA_PACKAGES} \\
     && ${YUM} -y clean all \\
     && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
     && mkdir -p \${SOURCES} \\
-        \${WORKSPACE} \\
-        \${OUTPUT} \\
-        \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} $(test "$AFTER_EXTRA_PACKAGES" && echo "&& yum -y install ${AFTER_EXTRA_PACKAGES}")
-
-VOLUME ["\${SOURCES}", "\${OUTPUT}", "\${WORKSPACE}", "\${RPM_BUILD_DIR}"]
+        \${OUTPUT} $(test "$AFTER_EXTRA_PACKAGES" && echo "&& yum -y install ${AFTER_EXTRA_PACKAGES}")
+RUN runuser builder rpmdev-setuptree
+VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
 ADD ./assets/build /usr/bin/build
 ADD ./assets/rpmlint.config /etc/rpmlint/custom.config
