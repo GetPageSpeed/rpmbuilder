@@ -1,7 +1,9 @@
 # RPM build containers for Red Hat based various distros
 
+[![Build Status](https://travis-ci.org/GetPageSpeed/rpmbuilder.svg?branch=master)](https://travis-ci.org/GetPageSpeed/rpmbuilder)
+
 ### Available versions
-Available versions can be located by visiting [Docker Hub Repository](https://hub.docker.com/r/alectolytic/rpmbuilder/tags/).
+Available versions can be located by visiting [Docker Hub Repository](https://hub.docker.com/r/getpagespeed/rpmbuilder/tags/).
 
 ### Fetch image
 ```bash
