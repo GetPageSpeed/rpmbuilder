@@ -36,10 +36,10 @@ for specFile in ${WORKSPACE}/*.spec; do
 
   # install build requires
   ${BUILDDEP_CMD} -y $specFile
-  spectool --sourcedir --get-files $specFile
+  runuser builder spectool --sourcedir --get-files $specFile
 
   # build SRPM, also allows to fail quicker
-  rpmbuild -bs $specFile
+  runuser builder rpmbuild -bs $specFile
 
   if [[ -n ${RPMLINT} ]]; then
     # SRPM built successfully. Check it using rpmlint
@@ -50,7 +50,7 @@ for specFile in ${WORKSPACE}/*.spec; do
 
   if [[ -z ${SRPM_ONLY} ]]; then
     # attempting to build RPM now
-    rpmbuild -ba $specFile
+    runuser builder rpmbuild -ba $specFile
 
     if [[ -n ${RPMLINT} ]]; then
       # RPM built successfully. Check it using rpmlint
