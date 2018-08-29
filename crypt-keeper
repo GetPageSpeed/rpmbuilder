@@ -10,6 +10,8 @@ function generate() {
 
     DISTRO=${1-fedora}
     RELEASE=${2-latest}
+    # Last EPEL is 7 so far:
+    RELEASE_EPEL=${2-7}
 
     ROOT=$(pwd)/${DISTRO}/${RELEASE}/
     ASSETS=${ROOT}/assets
@@ -20,15 +22,16 @@ function generate() {
     cp -R ./assets ${ROOT}/.
     # cp LICENCE README.md
     YUM="yum"
-    2018-08-29 added @buildsys-build to better "emulate" mock and hopefully fix strange issues of building varnish-modules
-    PACKAGES="rpm-build rpmdevtools yum-utils rpmlint @buildsys-build"
+    PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
     case "${DISTRO}" in
         centos|cloudrouter*centos)
-            EXTRA_PACKAGES="epel-release centos-release-scl https://extras.getpagespeed.com/release-el${RELEASE}-latest.rpm";
+            EXTRA_PACKAGES="epel-release centos-release-scl https://extras.getpagespeed.com/release-el${RELEASE_EPEL}-latest.rpm";
+            AFTER_EXTRA_PACKAGES="@buildsys-build"
+            # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
             if [ "$RELEASE" == "6" ]; then
                 # EXTRA_PACKAGES="${EXTRA_PACKAGES} something-for-el6"
                 # Should be in the .spec as well. Our build env isn't "clean OS" but we want faster builds!
-                AFTER_EXTRA_PACKAGES="devtoolset-7-gcc-c++ devtoolset-7-binutils"
+                AFTER_EXTRA_PACKAGES="${AFTER_EXTRA_PACKAGES} devtoolset-7-gcc-c++ devtoolset-7-binutils"
             fi
             ;;
         fedora)
