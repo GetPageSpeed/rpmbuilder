@@ -7,10 +7,10 @@ SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 
 # Use rpm instead of rpmbuild to avoid bad exit in EL6
-RPM_BUILD_SOURCES=$(runuser builder rpm --eval '%{_sourcedir}')
-RPM_BUILD_RPMS=$(runuser builder rpm --eval '%{_rpmdir}')
-RPM_BUILD_SRPMS=$(runuser builder rpm --eval '%{_srcrpmdir}')
-RPM_BUILD_SPECS=$(runuser builder rpm --eval '%{_specdir}'
+RPM_BUILD_SOURCES=$(runuser builder -c "rpm --eval '%{_sourcedir}'")
+RPM_BUILD_RPMS=$(runuser builder -c "rpm --eval '%{_rpmdir}'")
+RPM_BUILD_SRPMS=$(runuser builder -c "rpm --eval '%{_srcrpmdir}'")
+RPM_BUILD_SPECS=$(runuser builder -c "rpm --eval '%{_specdir}'")
 
 echo $ RPM_BUILD_SPECS
 # copy any .spec filess to rpmbuild/SPECS directory
@@ -38,10 +38,10 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   # install build requires
   ${BUILDDEP_CMD} -y $specFile
-  runuser builder spectool --sourcedir --get-files $specFile
+  runuser builder -c "spectool --sourcedir --get-files $specFile"
 
   # build SRPM, also allows to fail quicker
-  runuser builder rpmbuild -bs $specFile
+  runuser builder -c "rpmbuild -bs $specFile"
 
   if [[ -n ${RPMLINT} ]]; then
     # SRPM built successfully. Check it using rpmlint
@@ -52,7 +52,7 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   if [[ -z ${SRPM_ONLY} ]]; then
     # attempting to build RPM now
-    runuser builder rpmbuild -ba $specFile
+    runuser builder -c "rpmbuild -ba $specFile"
 
     if [[ -n ${RPMLINT} ]]; then
       # RPM built successfully. Check it using rpmlint
