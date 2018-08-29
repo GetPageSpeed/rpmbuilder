@@ -6,7 +6,7 @@ Available versions can be located by visiting [Docker Hub Repository](https://hu
 ### Fetch image
 ```bash
 BUILDER_VERSION=centos-7
-docker pull alectolytic/rpmbuilder:${BUILDER_VERSION}
+docker pull GetPageSpeed/rpmbuilder:${BUILDER_VERSION}
 ```
 
 ### Run
@@ -27,7 +27,7 @@ chcon -Rt svirt_sandbox_file_t ${OUTPUT_DIR} ${SOURCE_DIR}
 docker run \
     -v ${SOURCE_DIR}:/sources \
     -v ${OUTPUT_DIR}:/output \
-    alectolytic/rpmbuilder:${BUILDER_VERSION}
+    GetPageSpeed/rpmbuilder:${BUILDER_VERSION}
 ```
 
 The output files will be available in `OUTPUT_DIR`.
@@ -39,7 +39,7 @@ If you are creating a spec file, it is often useful to have a clean room debuggi
 docker run --rm -it --entrypoint bash \
     -v ${SOURCE_DIR}:/sources \
     -v ${OUTPUT_DIR}:/output \
-    alectolytic/rpmbuilder:${BUILDER_VERSION}
+    GetPageSpeed/rpmbuilder:${BUILDER_VERSION}
 ```
 This command will drop you into a bash shell within the container. From here, you can execute `build` to build the spec file. You can also iteratively modify the specfile and re-run `build`.
 
