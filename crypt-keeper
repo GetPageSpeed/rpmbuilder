@@ -20,7 +20,8 @@ function generate() {
     cp -R ./assets ${ROOT}/.
     # cp LICENCE README.md
     YUM="yum"
-    PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
+    2018-08-29 added @buildsys-build to better "emulate" mock and hopefully fix strange issues of building varnish-modules
+    PACKAGES="rpm-build rpmdevtools yum-utils rpmlint @buildsys-build"
     case "${DISTRO}" in
         centos|cloudrouter*centos)
             EXTRA_PACKAGES="epel-release centos-release-scl https://extras.getpagespeed.com/release-el${RELEASE}-latest.rpm";
