@@ -22,9 +22,9 @@ chown root:root ${WORKSPACE}/*
 find ${WORKSPACE} -mindepth 1 -maxdepth 1 ! -name "*.spec" \
     -exec cp -R {} ${RPM_BUILD_SOURCES}/. \;
 
-# With SCLO repos in place, yum-builddep somehow resolves "BuildRequires: gcc" to devtoolset-4-gcc
-# This happens only with Docker builds for some reason (mock is fine)
-BUILDDEP_CMD="yum-builddep --exclude devtoolset-3-*,devtoolset-4-*"
+# With SCLO repos in place, yum-builddep might resolve "BuildRequires: gcc" to devtoolset-4-gcc
+# In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
+BUILDDEP_CMD="yum-builddep"
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
 
 for specFile in ${WORKSPACE}/*.spec; do
