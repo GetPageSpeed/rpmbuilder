@@ -50,6 +50,7 @@ ENV WORKSPACE=${WORKSPACE} \\
     RPM_BUILD_DIR=${RPM_BUILD_DIR}
 
 RUN useradd builder -G wheel
+RUN rm -rf /etc/yum.repos.d/{CentOS-Sources.repo,CentOS-Sources.repo} 
 RUN ${YUM} -y install ${PACKAGES} ${EXTRA_PACKAGES} \\
     && ${YUM} -y clean all \\
     && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
