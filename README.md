@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/GetPageSpeed/rpmbuilder.svg?branch=master)](https://travis-ci.org/GetPageSpeed/rpmbuilder)
 
+This is different from upstream because it allows for faster failed builds: a failed build can be detected early through building SRPM first, as well as optional `rpmlint` checks. In the upstream docker image, a failed build will have an exit status code of 0, so CI tools will not be able to detect failed builds to begin with.
+
 ### Available versions
 Available versions can be located by visiting [Docker Hub Repository](https://hub.docker.com/r/getpagespeed/rpmbuilder/tags/).
 
@@ -34,6 +36,11 @@ docker run \
 
 The output files will be available in `OUTPUT_DIR`.
 
+#### Custom run
+
+* You may pass `RPMLINT=1` for failing on `rpmlint` checks (pedantic way of producing quality RPMs)
+* You may pass `SRPM_ONLY=1` for only fast checks of particular file's build-ability
+
 ###  Debugging
 If you are creating a spec file, it is often useful to have a clean room debugging environment. You can achieve this by using the following command.
 
@@ -52,5 +59,4 @@ The following volumes can be mounted from the host.
 | :------------ | :------------ |
 | /sources | Source to build RPM from |
 | /output | Output directory where all built RPMs and SRPMs are extracted to |
-| /workspace | Temporary workspace created for staging sources |
 | /root/rpmbuild | rpmbuild directory for debugging etc |
