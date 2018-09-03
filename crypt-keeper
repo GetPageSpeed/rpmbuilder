@@ -25,18 +25,17 @@ function generate() {
     PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
     case "${DISTRO}" in
         centos|cloudrouter*centos)
-            EXTRA_PACKAGES="epel-release centos-release-scl https://extras.getpagespeed.com/release-el${RELEASE_EPEL}-latest.rpm";
-            AFTER_EXTRA_PACKAGES="@buildsys-build"
+            EXTRA_RELEASES="epel-release centos-release-scl https://extras.getpagespeed.com/release-el${RELEASE_EPEL}-latest.rpm";
+            PACKAGES="${PACKAGES} @buildsys-build"
             # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
             if [ "$RELEASE" == "6" ]; then
-                # EXTRA_PACKAGES="${EXTRA_PACKAGES} something-for-el6"
                 # Should be in the .spec as well. Our build env isn't "clean OS" but we want faster builds!
-                AFTER_EXTRA_PACKAGES="${AFTER_EXTRA_PACKAGES} devtoolset-7-gcc-c++ devtoolset-7-binutils"
+                PACKAGES="${PACKAGES} devtoolset-7-gcc-c++ devtoolset-7-binutils"
             fi
             ;;
         fedora)
             YUM="dnf";
-            EXTRA_PACKAGES="'dnf-command(builddep)'";
+            PACKAGES="'dnf-command(builddep)'";
             ;;
     esac
     # header
@@ -50,12 +49,12 @@ ENV WORKSPACE=${WORKSPACE} \\
     RPM_BUILD_DIR=${RPM_BUILD_DIR}
 
 RUN useradd builder -G wheel
-RUN rm -rf /etc/yum.repos.d/{CentOS-Sources.repo,CentOS-Sources.repo} 
-RUN ${YUM} -y install ${PACKAGES} ${EXTRA_PACKAGES} \\
+RUN rm -rf /etc/yum.repos.d/{CentOS-Sources.repo,CentOS-Sources.repo} $(test "$EXTRA_RELEASES" && echo "&& yum -y install ${EXTRA_RELEASES}")
+RUN ${YUM} -y install ${PACKAGES} \\
     && ${YUM} -y clean all \\
     && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
     && mkdir -p \${SOURCES} \\
-        \${OUTPUT} $(test "$AFTER_EXTRA_PACKAGES" && echo "&& yum -y install ${AFTER_EXTRA_PACKAGES}")
+        \${OUTPUT} 
 RUN runuser builder rpmdev-setuptree
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
