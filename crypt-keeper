@@ -58,6 +58,7 @@ RUN ${YUM} -y install ${PACKAGES} \\
 RUN runuser builder rpmdev-setuptree
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
+ADD ./assets/spectool /usr/local/bin/spectool
 ADD ./assets/build /usr/bin/build
 ADD ./assets/rpmlint.config /etc/rpmlint/custom.config
 
