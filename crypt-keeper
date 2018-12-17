@@ -50,6 +50,7 @@ ENV WORKSPACE=${WORKSPACE} \\
 
 RUN useradd builder -G wheel
 RUN rm -rf /etc/yum.repos.d/{CentOS-Sources.repo,CentOS-Sources.repo} $(test "$EXTRA_RELEASES" && echo "&& yum -y install ${EXTRA_RELEASES}")
+RUN [ -f "/etc/yum.repos.d/CentOS-SCLo-scl-rh.repo" ] && sed -i '/centos-sclo-rh-source/,//d' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
 RUN ${YUM} -y install ${PACKAGES} \\
     && ${YUM} -y clean all \\
     && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
