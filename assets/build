@@ -9,7 +9,7 @@ OUTPUT=${OUTPUT-${SOURCES}}
 # Use custom rpmlint config per repository, if such exists
 [ -f ${SOURCES}/rpmlint.config ] && mv -f ${SOURCES}/rpmlint.config /etc/rpmlint/custom.config
 # Run optional per-repo file with extra build preparations needed like setting up more repos
-[ -f ${SOURCES}/prepare.sh ] && bash prepare.sh
+[ -f ${SOURCES}/prepare.sh ] && bash ${SOURCES}/prepare.sh
 
 # Use rpm instead of rpmbuild to avoid bad exit in EL6
 RPM_BUILD_SOURCES=$(runuser builder -c "rpm --eval '%{_sourcedir}'")
