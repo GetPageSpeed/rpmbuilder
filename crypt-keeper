@@ -25,47 +25,51 @@ function generate() {
     PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
     case "${DISTRO}" in
         centos|cloudrouter*centos)
-            EXTRA_RELEASES="epel-release centos-release-scl https://extras.getpagespeed.com/release-el${RELEASE_EPEL}-latest.rpm";
-            PACKAGES="${PACKAGES} @buildsys-build"
+            # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
+            PRE_PACKAGES="epel-release centos-release-scl https://extras.getpagespeed.com/release-el${RELEASE_EPEL}-latest.rpm";
+            PACKAGES="${PACKAGES} @buildsys-build devtoolset-8-gcc-c++ devtoolset-8-binutils"
             # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
-            if [ "$RELEASE" == "6" ]; then
-                # Should be in the .spec as well. Our build env isn't "clean OS" but we want faster builds!
-                PACKAGES="${PACKAGES} devtoolset-7-gcc-c++ devtoolset-7-binutils"
-            fi
+            # devtoolset-8 is for faster CI builds of packages that want to use it
             ;;
         fedora)
             YUM="dnf";
+            # Just a dummy pre-install to simplify RUN step below
+            PRE_PACKAGES="dnf"
             PACKAGES="'dnf-command(builddep)'";
             ;;
     esac
     # header
     cat > ${DOCKERFILE} << EOF
 FROM ${DISTRO}:${RELEASE}
-MAINTAINER "Arun Neelicattu" <arun.neelicattu@gmail.com>
+MAINTAINER "Danila Vershinin" <info@getpagespeed.com>
 
 ENV WORKSPACE=${WORKSPACE} \\
     SOURCES=${SOURCES} \\
     OUTPUT=${OUTPUT} \\
     RPM_BUILD_DIR=${RPM_BUILD_DIR}
 
-RUN useradd builder -G wheel
-RUN rm -rf /etc/yum.repos.d/{CentOS-Sources.repo,CentOS-Sources.repo} $(test "$EXTRA_RELEASES" && echo "&& yum -y install ${EXTRA_RELEASES}")
-RUN [ -f "/etc/yum.repos.d/CentOS-SCLo-scl-rh.repo" ] && sed -i '/centos-sclo-rh-source/,//d' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
-RUN [ -f "/etc/yum.repos.d/CentOS-SCLo-scl.repo" ] && sed -i '/centos-sclo-sclo-source/,//d' /etc/yum.repos.d/CentOS-SCLo-scl.repo
-RUN ${YUM} -y install ${PACKAGES} \\
-    && ${YUM} -y clean all \\
-    && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
-    && mkdir -p \${SOURCES} \\
-        \${OUTPUT} 
-RUN runuser builder rpmdev-setuptree
-VOLUME ["\${SOURCES}", "\${OUTPUT}"]
+# this is required to disable source repos that yum-builddep unnecessarily enables. this is no longer required. see patch below
+# RUN rm -rf /etc/yum.repos.d/{CentOS-Sources.repo,CentOS-Sources.repo} $(test "$EXTRA_RELEASES" && echo "&& yum -y install ${EXTRA_RELEASES}")
+# RUN [ -f "/etc/yum.repos.d/CentOS-SCLo-scl-rh.repo" ] && sed -i '/centos-sclo-rh-source/,//d' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+# RUN [ -f "/etc/yum.repos.d/CentOS-SCLo-scl.repo" ] && sed -i '/centos-sclo-sclo-source/,//d' /etc/yum.repos.d/CentOS-SCLo-scl.repo
 
 ADD ./assets/build /usr/bin/build
 ADD ./assets/rpmlint.config /etc/rpmlint/custom.config
-
-# patch yum-builddep to NOT enable source repos if .spec file is used (fix bug)
+# patch yum-builddep to NOT enable source repos if .spec file is used (fixes bug)
 ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
-RUN patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true
+
+RUN useradd builder -G wheel \\
+    && ${YUM} -y install ${PRE_PACKAGES} \\
+    && ${YUM} -y install ${PACKAGES} \\
+    && ${YUM} -y clean all \\
+    && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
+    && mkdir -p \${SOURCES} \${OUTPUT} \\
+    && runuser builder rpmdev-setuptree \\
+    && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true)
+
+VOLUME ["\${SOURCES}", "\${OUTPUT}"]
+
+RUN 
 
 CMD ["build"]
 EOF
