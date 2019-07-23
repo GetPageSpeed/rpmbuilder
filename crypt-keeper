@@ -63,6 +63,10 @@ VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 ADD ./assets/build /usr/bin/build
 ADD ./assets/rpmlint.config /etc/rpmlint/custom.config
 
+# patch yum-builddep to NOT enable source repos if .spec file is used (fix bug)
+ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
+RUN patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true
+
 CMD ["build"]
 EOF
 }
