@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -eo pipefail
 
 DOCKER_REGISRY_USER=getpagespeed
 
@@ -68,8 +69,6 @@ RUN useradd builder -G wheel \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
-
-RUN 
 
 CMD ["build"]
 EOF
