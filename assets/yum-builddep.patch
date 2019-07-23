@@ -1,0 +1,22 @@
+--- /bin/yum-builddep	2018-10-30 22:58:10.000000000 +0000
++++ /bin/yum-builddep2	2019-07-23 10:25:41.430349481 +0000
+@@ -99,9 +99,16 @@
+             self.logger.error("Error: You must be root to install packages")
+             sys.exit(1)
+ 
+-        # Use source rpms
+-        self.arch.archlist.append('src')
+-        self.setupSourceRepos()
++        sourceReposNeeded = False
++        for arg in self.cmds:
++            if not(hasattr(rpm, 'spec') and hasattr(rpm.spec, 'sourceHeader') 
++              and arg.endswith('.spec')):
++              sourceReposNeeded = True
++
++        if sourceReposNeeded:  
++          # Use source rpms
++          self.arch.archlist.append('src')
++          self.setupSourceRepos()
+ 
+         # Setup yum (Ts, RPM db, Repo & Sack)
+         self.doUtilYumSetup()
