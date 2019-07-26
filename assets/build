@@ -13,7 +13,7 @@ OUTPUT=${OUTPUT-${SOURCES}}
 
 # each repo can go with rpmmacros (useful for building multiple branches while retaining same spec)
 [ -f ${SOURCES}/rpmmacros ] \
-  && cat(${SOURCES}/rpmmacros) >> /home/builder/.rpmmacros \
+  && cat ${SOURCES}/rpmmacros >> /home/builder/.rpmmacros \
   && chown builder:builder /home/builder/.rpmmacros 
 
 # Use rpm instead of rpmbuild to avoid bad exit in EL6
