@@ -34,6 +34,11 @@ chown builder:builder /home/builder/rpmbuild
 BUILDDEP_CMD="yum-builddep"
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
 
+# enable specified repositories before build
+if [[ -n ${ENABLE_REPOS} ]]; then
+  yum-config-manager --enable "${ENABLE_REPOS}"
+fi
+
 for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
