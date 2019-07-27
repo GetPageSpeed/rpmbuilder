@@ -38,7 +38,7 @@ function generate() {
             YUM="dnf";
             # Just a dummy pre-install to simplify RUN step below
             PRE_PACKAGES="dnf"
-            PACKAGES="'dnf-command(builddep)'";
+            PACKAGES="'dnf-command(builddep)' rpmdevtools";
             ;;
     esac
     # header
