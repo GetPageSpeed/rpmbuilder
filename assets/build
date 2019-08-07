@@ -13,14 +13,14 @@ OUTPUT=${OUTPUT-${SOURCES}}
 
 # each repo can go with rpmmacros (useful for building multiple branches while retaining same spec)
 [ -f ${SOURCES}/rpmmacros ] \
-  && cat ${SOURCES}/rpmmacros >> /home/builder/.rpmmacros \
-  && chown builder:builder /home/builder/.rpmmacros 
+  && cat ${SOURCES}/rpmmacros >> /root/.rpmmacros \
+  && chown root:root /root/.rpmmacros 
 
 # Use rpm instead of rpmbuild to avoid bad exit in EL6
-RPM_BUILD_SOURCES=$(runuser builder -c "rpm --eval '%{_sourcedir}'")
-RPM_BUILD_RPMS=$(runuser builder -c "rpm --eval '%{_rpmdir}'")
-RPM_BUILD_SRPMS=$(runuser builder -c "rpm --eval '%{_srcrpmdir}'")
-RPM_BUILD_SPECS=$(runuser builder -c "rpm --eval '%{_specdir}'")
+RPM_BUILD_SOURCES=$(rpm --eval '%{_sourcedir}')
+RPM_BUILD_RPMS=$(rpm --eval '%{_rpmdir}')
+RPM_BUILD_SRPMS=$(rpm --eval '%{_srcrpmdir}')
+RPM_BUILD_SPECS=$(rpm --eval '%{_specdir}')
 
 echo $ RPM_BUILD_SPECS
 # copy any .spec filess to rpmbuild/SPECS directory
@@ -32,7 +32,7 @@ find ${SOURCES} -mindepth 1 -maxdepth 1 ! -name "*.spec" \
     -exec cp -R {} ${RPM_BUILD_SOURCES}/. \;
     
 # fix permissions on working copy
-chown builder:builder /home/builder/rpmbuild    
+chown root:root /root/rpmbuild    
 
 # With SCLO repos in place, yum-builddep might resolve "BuildRequires: gcc" to devtoolset-4-gcc
 # In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
@@ -53,10 +53,10 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   # install build requires
   ${BUILDDEP_CMD} -y $specFile
-  runuser builder -c "spectool --sourcedir --get-files $specFile"
+  spectool --sourcedir --get-files $specFile
 
   # build SRPM, also allows to fail quicker
-  runuser builder -c "rpmbuild -bs $specFile"
+  rpmbuild -bs $specFile
 
   if [[ -n ${RPMLINT} ]]; then
     # SRPM built successfully. Check it using rpmlint
@@ -67,7 +67,7 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   if [[ -z ${SRPM_ONLY} ]]; then
     # attempting to build RPM now
-    runuser builder -c "rpmbuild -ba $specFile"
+    rpmbuild -ba $specFile
 
     if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
       # RPM built successfully. Check it using rpmlint
