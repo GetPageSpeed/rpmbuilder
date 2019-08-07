@@ -68,7 +68,7 @@ RUN ${YUM} -y install ${PRE_PACKAGES} \\
     && mkdir -p \${SOURCES} \\
         \${WORKSPACE} \\
         \${OUTPUT} \\
-        \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
