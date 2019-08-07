@@ -65,8 +65,10 @@ RUN ${YUM} -y install ${PRE_PACKAGES} \\
     && ${YUM} -y install ${PACKAGES} \\
     && ${YUM} -y clean all \\
     && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
-    && mkdir -p \${SOURCES} \${OUTPUT} \\
-    && rpmdev-setuptree \\
+    && mkdir -p \${SOURCES} \\
+        \${WORKSPACE} \\
+        \${OUTPUT} \\
+        \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
