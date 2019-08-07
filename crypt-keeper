@@ -61,13 +61,12 @@ ADD ./assets/rpmlint.config /etc/rpmlint/custom.config
 # patch yum-builddep to NOT enable source repos if .spec file is used (fixes bug)
 ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
 
-RUN useradd builder -G wheel \\
-    && ${YUM} -y install ${PRE_PACKAGES} \\
+RUN ${YUM} -y install ${PRE_PACKAGES} \\
     && ${YUM} -y install ${PACKAGES} \\
     && ${YUM} -y clean all \\
     && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
     && mkdir -p \${SOURCES} \${OUTPUT} \\
-    && runuser builder rpmdev-setuptree \\
+    && rpmdev-setuptree \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
