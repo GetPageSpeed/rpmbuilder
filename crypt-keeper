@@ -61,8 +61,7 @@ ADD ./assets/rpmlint.config /etc/rpmlint/custom.config
 # patch yum-builddep to NOT enable source repos if .spec file is used (fixes bug)
 ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
 
-RUN (stat /usr/lib/python2.7/site-packages/yum/__init__.py && sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent += "rpmbuilder"@' /usr/lib/python2.7/site-packages/yum/__init__.py) \\
-    || (stat /usr/lib/python2.6/site-packages/yum/__init__.py && sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent += "rpmbuilder"@' /usr/lib/python2.6/site-packages/yum/__init__.py)
+RUN sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent += "rpmbuilder"@' /usr/lib/python2.7/site-packages/yum/__init__.py
 
 RUN ${YUM} -y install ${PRE_PACKAGES} \\
     && ${YUM} -y install ${PACKAGES} \\
