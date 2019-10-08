@@ -31,7 +31,8 @@ function generate() {
             if [ $RELEASE_EPEL -le 7 ]; then PRE_PACKAGES="$PRE_PACKAGES centos-release-scl"; fi
             # CircleCI in EL6 sometimes fails (support claims it's due to lack of "official" git)
             # We threw latest git to our EL6 repo (clean Fedora rebuilt)
-            PACKAGES="${PACKAGES} @buildsys-build git devtoolset-8-gcc-c++ devtoolset-8-binutils"
+            PACKAGES="${PACKAGES} @buildsys-build git"
+            if [ $RELEASE_EPEL -le 7 ]; then PACKAGES="$PACKAGES devtoolset-8-gcc-c++ devtoolset-8-binutils"; fi
             # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
             # devtoolset-8 is for faster CI builds of packages that want to use it
             ;;
