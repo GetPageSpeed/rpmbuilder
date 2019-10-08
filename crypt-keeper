@@ -34,6 +34,7 @@ function generate() {
             PACKAGES="${PACKAGES} @buildsys-build git devtoolset-8-gcc-c++ devtoolset-8-binutils"
             if [ $RELEASE_EPEL -ge 8 ]; then 
               YUM="dnf";
+              ls -al /etc/yum.repos.d
               sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-PowerTools.repo
               PACKAGES="'dnf-command(builddep)' git rpmlint rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27"
             fi
