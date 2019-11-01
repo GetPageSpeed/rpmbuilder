@@ -78,7 +78,8 @@ RUN ${YUM} -y install ${PRE_PACKAGES} \\
         \${OUTPUT} \\
         \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true) \\
-    && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-PowerTools.repo || true)
+    && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-PowerTools.repo || true) \\
+    && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
