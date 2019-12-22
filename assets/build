@@ -34,6 +34,10 @@ find ${SOURCES} -mindepth 1 -maxdepth 1 ! -name "*.spec" \
 # fix permissions on working copy
 chown root:root /root/rpmbuild    
 
+# VMOD tests during build:
+# varnishd is dropping to user nobody/varnish, and as such doesn't have access in /root/
+chmod 0755 /root
+
 # With SCLO repos in place, yum-builddep might resolve "BuildRequires: gcc" to devtoolset-4-gcc
 # In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
 BUILDDEP_CMD="yum-builddep"
