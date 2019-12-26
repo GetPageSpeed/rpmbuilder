@@ -45,7 +45,12 @@ command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
 
 # enable specified repositories before build
 if [[ -n ${ENABLE_REPOS} ]]; then
-  yum-config-manager --enable "${ENABLE_REPOS}"
+  RHEL=$(rpm -E '%{rhel}')
+  if [ "$RHEL" -lt "8" ]; then
+    yum-config-manager --enable "${ENABLE_REPOS}"
+  else
+    dnf config-manager --set-enabled "${ENABLE_REPOS}"
+  fi
 fi
 
 for specFile in ${RPM_BUILD_SPECS}/*.spec; do
