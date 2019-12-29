@@ -62,7 +62,7 @@ ENV WORKSPACE=${WORKSPACE} \\
 # RUN [ -f "/etc/yum.repos.d/CentOS-SCLo-scl.repo" ] && sed -i '/centos-sclo-sclo-source/,//d' /etc/yum.repos.d/CentOS-SCLo-scl.repo
 
 ADD ./assets/build /usr/bin/build
-ADD ./assets/rpmlint.config /etc/rpmlint/custom.config
+ADD ./assets/rpmlint.config /etc/rpmlint/config
 # patch yum-builddep to NOT enable source repos if .spec file is used (fixes bug)
 ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
 
