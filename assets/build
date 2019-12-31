@@ -79,8 +79,14 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
     rpmbuild -ba $specFile
 
     if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
-      # RPM built successfully. Check it using rpmlint
-      rpmlint ${RPM_BUILD_RPMS}/*/*.rpm
+      # RPMs built successfully. Check using rpmlint
+      # Skip debuginfo packages from rpmlint because:
+      # * their rpmlint failure is never crucial to the actual app's delivery!
+      # * we can never fix these: "E: description-line-too-long C This package provides debug information for package <some lengthy name>"
+      # * because there is no control of it and some packages just have to be lengthy in names
+      find ${RPM_BUILD_RPMS} -type f \
+        -not -name "*-debuginfo-*" -not -name "*-debugsource-*" -name "*.rpm" \
+        -exec rpmlint {} \;
     fi
 
     mv ${RPM_BUILD_RPMS}/*/*.rpm ${OUTPUT}
