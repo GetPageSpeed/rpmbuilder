@@ -67,7 +67,7 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
   # build SRPM, also allows to fail quicker
   rpmbuild -bs $specFile
 
-  if [[ -n ${RPMLINT} ]]; then
+  if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # SRPM built successfully. Check it using rpmlint
     rpmlint ${RPM_BUILD_SRPMS}/*.rpm
   fi
