@@ -6,6 +6,16 @@ set -exo pipefail
 SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 
+# enable specified repositories before build
+if [[ -n ${ENABLE_REPOS} ]]; then
+  RHEL=$(rpm -E '%{rhel}')
+  if [ "$RHEL" -lt "8" ]; then
+    yum-config-manager --enable "${ENABLE_REPOS}"
+  else
+    dnf config-manager --set-enabled "${ENABLE_REPOS}"
+  fi
+fi
+
 # Use custom rpmlint config per repository, if such exists
 [ -f ${SOURCES}/rpmlint.config ] && mv -f ${SOURCES}/rpmlint.config /etc/rpmlint/custom.config
 # Run optional per-repo file with extra build preparations needed like setting up more repos
@@ -42,16 +52,6 @@ chmod 0755 /root
 # In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
 BUILDDEP_CMD="yum-builddep"
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
-
-# enable specified repositories before build
-if [[ -n ${ENABLE_REPOS} ]]; then
-  RHEL=$(rpm -E '%{rhel}')
-  if [ "$RHEL" -lt "8" ]; then
-    yum-config-manager --enable "${ENABLE_REPOS}"
-  else
-    dnf config-manager --set-enabled "${ENABLE_REPOS}"
-  fi
-fi
 
 for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
