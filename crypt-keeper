@@ -69,7 +69,7 @@ Add ./assets/rpmbuilder_ua.py /tmp/rpmbuilder_ua.py
 
 RUN sed -ri 's@^default_grabber\\.opts\\.user_agent\\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.7/site-packages/yum/__init__.py  ||:
 RUN sed -ri 's@^default_grabber\\.opts\\.user_agent\\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.6/site-packages/yum/__init__.py  ||:
-RUN stat /usr/lib/python3.6/site-packages/dnf && cp /tmp/rpmbuilder_ua.py /usr/lib/python3.6/site-packages/dnf/  ||:
+RUN stat /usr/lib/python3.6/site-packages/dnf-plugins && cp /tmp/rpmbuilder_ua.py /usr/lib/python3.6/site-packages/dnf-plugins/  ||:
 
 RUN ${YUM} -y install ${PRE_PACKAGES} \\
     && ${YUM} -y install ${PACKAGES} \\
