@@ -61,7 +61,10 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
   fi
 
   # install build requires
-  ${BUILDDEP_CMD} -y $specFile
+  if ! ${BUILDDEP_CMD} -y $specFile; then
+    yum clean all
+    ${BUILDDEP_CMD} -y $specFile
+  fi
   spectool --sourcedir --get-files $specFile
 
   # build SRPM, also allows to fail quicker
