@@ -75,8 +75,10 @@ Add ./assets/rpmbuilder_ua.py /tmp/rpmbuilder_ua.py
 RUN sed -ri 's@^default_grabber\\.opts\\.user_agent\\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.7/site-packages/yum/__init__.py  ||:
 RUN sed -ri 's@^default_grabber\\.opts\\.user_agent\\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.6/site-packages/yum/__init__.py  ||:
 RUN stat /usr/lib/python3.6/site-packages/dnf-plugins && cp /tmp/rpmbuilder_ua.py /usr/lib/python3.6/site-packages/dnf-plugins/  ||:
+RUN rm -rf /usr/lib/yum-plugins/
 
 RUN ${YUM} -y install ${PRE_PACKAGES} \\
+    && rm -rf /usr/lib/yum-plugins/getpagespeed.py* /etc/yum/pluginconf.d/getpagespeed.conf /usr/lib/python3.6/site-packages/dnf-plugins/getpagespeed.py \\
     && ${YUM} -y install ${PACKAGES} \\
     && ${YUM} -y clean all \\
     && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
