@@ -55,7 +55,6 @@ command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
 RPMBUILD_SETARCH=""
 if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
   # getting builddep to fetch i686 RPMs from x86_64 repo is no easy task :D
-  BUILDDEP_CMD="setarch ${SETARCH} ${BUILDDEP_CMD}"
   RPMBUILD_SETARCH="setarch ${SETARCH}"
   echo x86_64 > /etc/yum/vars/basearch
 fi
@@ -72,10 +71,16 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
     yum clean all
     ${BUILDDEP_CMD} -y $specFile
   fi
+  
+  # repeat step for chosen arch
+  if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
+    ${RPMBUILD_SETARCH} ${BUILDDEP_CMD}
+  fi
+  
   spectool --sourcedir --get-files $specFile
 
   # build SRPM, also allows to fail quicker
-  ${RPMBUILD_SETARCH} rpmbuild -bs $specFile
+  rpmbuild -bs $specFile
 
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # SRPM built successfully. Check it using rpmlint
