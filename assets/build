@@ -54,8 +54,10 @@ BUILDDEP_CMD="yum-builddep"
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
 RPMBUILD_SETARCH=""
 if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
+  # getting builddep to fetch i686 RPMs from x86_64 repo is no easy task :D
   BUILDDEP_CMD="setarch ${SETARCH} ${BUILDDEP_CMD}"
   RPMBUILD_SETARCH="setarch ${SETARCH}"
+  echo x86_64 > /etc/yum/vars/basearch
 fi
 
 for specFile in ${RPM_BUILD_SPECS}/*.spec; do
