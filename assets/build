@@ -74,7 +74,10 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
   
   # repeat step for chosen arch
   if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
-    ${RPMBUILD_SETARCH} ${BUILDDEP_CMD}
+    if ! ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile; then
+      yum clean all
+      ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile
+    fi
   fi
   
   spectool --sourcedir --get-files $specFile
