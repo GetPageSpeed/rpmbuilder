@@ -52,6 +52,11 @@ chmod 0755 /root
 # In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
 BUILDDEP_CMD="yum-builddep"
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
+RPMBUILD_SETARCH=""
+if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
+  BUILDDEP_CMD="setarch ${SETARCH} ${BUILDDEP_CMD}"
+  RPMBUILD_SETARCH="setarch ${SETARCH}"
+fi
 
 for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
@@ -68,7 +73,7 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
   spectool --sourcedir --get-files $specFile
 
   # build SRPM, also allows to fail quicker
-  rpmbuild -bs $specFile
+  ${RPMBUILD_SETARCH} rpmbuild -bs $specFile
 
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # SRPM built successfully. Check it using rpmlint
@@ -79,7 +84,7 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   if [[ -z ${SRPM_ONLY} ]]; then
     # attempting to build RPM now
-    rpmbuild -ba $specFile
+    ${RPMBUILD_SETARCH} rpmbuild -ba $specFile
 
     if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
       # RPMs built successfully. Check using rpmlint
