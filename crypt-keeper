@@ -39,15 +39,15 @@ function generate() {
         amazonlinux|centos|cloudrouter*centos)
             # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
             PRE_PRE_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
-            PRE_PACKAGES="@buildsys-build"
+            PRE_PACKAGES="git"
             # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
             if [[ ${RELEASE_EPEL} -le 7 ]]; then PRE_PACKAGES="$PRE_PACKAGES centos-release-scl"; fi
             # CircleCI in EL6 sometimes fails (support claims it's due to lack of "official" git)
             # We threw latest git to our EL6 repo (clean Fedora rebuilt)
-            PACKAGES="${PACKAGES} git devtoolset-8-gcc-c++ devtoolset-8-binutils"
+            PACKAGES="${PACKAGES} @buildsys-build devtoolset-8-gcc-c++ devtoolset-8-binutils"
             if [[ ${RELEASE_EPEL} -ge 8 ]]; then
               YUM="dnf";
-              PACKAGES="'dnf-command(builddep)' git rpmlint rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua"
+              PACKAGES="'dnf-command(builddep)' rpmlint rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua"
             fi
             # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
             # devtoolset-8 is for faster CI builds of packages that want to use it
