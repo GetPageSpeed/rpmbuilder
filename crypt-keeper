@@ -94,7 +94,6 @@ RUN stat /usr/lib/python3.6/site-packages/dnf-plugins && cp /tmp/rpmbuilder_ua.p
 RUN rm -rf /usr/lib/yum-plugins/
 
 RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
-    && ${EXTRA_CMD} \\
     && rm -rf /usr/lib/yum-plugins/getpagespeed.py* /etc/yum/pluginconf.d/getpagespeed.conf /usr/lib/python3.6/site-packages/dnf-plugins/getpagespeed.py \\
     && ${YUM} -y install ${PRE_PACKAGES} \\
     && ${YUM} -y install ${PACKAGES} \\
