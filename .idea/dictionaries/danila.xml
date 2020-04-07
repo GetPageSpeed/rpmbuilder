@@ -2,7 +2,9 @@
   <dictionary name="danila">
     <words>
       <w>amazonlinux</w>
+      <w>builddep</w>
       <w>centos</w>
+      <w>rpmdevtools</w>
     </words>
   </dictionary>
 </component>
