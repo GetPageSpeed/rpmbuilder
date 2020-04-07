@@ -11,8 +11,19 @@ function generate() {
 
     DISTRO=${1-fedora}
     RELEASE=${2-latest}
-    # Last EPEL is 7 so far:
-    RELEASE_EPEL=${2-7}
+    # Last EPEL is 8 so far:
+    RELEASE_EPEL=${2-8}
+
+    if [[ "$DISTRO" == "amazonlinux" ]]; then
+        case "$RELEASE" in
+        2)
+            RELEASE_EPEL=7
+            ;;
+        *)
+           RELEASE_EPEL=7
+           ;;
+        esac
+    fi
 
     ROOT=$(pwd)/${DISTRO}/${RELEASE}/
     ASSETS=${ROOT}/assets
@@ -25,14 +36,14 @@ function generate() {
     YUM="yum"
     PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
     case "${DISTRO}" in
-        centos|cloudrouter*centos)
+        amazonlinux|centos|cloudrouter*centos)
             # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
-            PRE_PACKAGES="epel-release https://extras.getpagespeed.com/release-latest.rpm";
-            if [ $RELEASE_EPEL -le 7 ]; then PRE_PACKAGES="$PRE_PACKAGES centos-release-scl"; fi
+            PRE_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+            if [[ ${RELEASE_EPEL} -le 7 ]]; then PRE_PACKAGES="$PRE_PACKAGES centos-release-scl"; fi
             # CircleCI in EL6 sometimes fails (support claims it's due to lack of "official" git)
             # We threw latest git to our EL6 repo (clean Fedora rebuilt)
             PACKAGES="${PACKAGES} @buildsys-build git devtoolset-8-gcc-c++ devtoolset-8-binutils"
-            if [ $RELEASE_EPEL -ge 8 ]; then 
+            if [[ ${RELEASE_EPEL} -ge 8 ]]; then
               YUM="dnf";
               PACKAGES="'dnf-command(builddep)' git rpmlint rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua"
             fi
@@ -45,11 +56,6 @@ function generate() {
             PRE_PACKAGES="dnf"
             PACKAGES="'dnf-command(builddep)' rpmdevtools";
             ;;
-        amazonlinux)
-            # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
-            PRE_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
-            PACKAGES="${PACKAGES} @buildsys-build git"
-            ;;            
     esac
     # header
     cat > ${DOCKERFILE} << EOF
