@@ -9,6 +9,7 @@ function generate() {
     WORKSPACE=${WORKSPACE-/workspace}
     RPM_BUILD_DIR=${RPM_BUILD_DIR-/rpmbuild}
 
+    EXTRA_CMD='echo 1'
     DISTRO=${1-fedora}
     RELEASE=${2-latest}
     # Last EPEL is 8 so far:
@@ -40,6 +41,8 @@ function generate() {
             # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
             PRE_PRE_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
             PRE_PACKAGES="bash"
+            # bypassing weird bug?
+            if [[ ${RELEASE_EPEL} -eq 6 ]]; then EXTRA_CMD="rpm --import rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6"; fi
             # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
             if [[ ${RELEASE_EPEL} -le 7 ]]; then PRE_PACKAGES="$PRE_PACKAGES centos-release-scl"; fi
             # CircleCI in EL6 sometimes fails (support claims it's due to lack of "official" git)
@@ -87,6 +90,7 @@ RUN stat /usr/lib/python3.6/site-packages/dnf-plugins && cp /tmp/rpmbuilder_ua.p
 RUN rm -rf /usr/lib/yum-plugins/
 
 RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
+    && ${EXTRA_CMD} \\
     && rm -rf /usr/lib/yum-plugins/getpagespeed.py* /etc/yum/pluginconf.d/getpagespeed.conf /usr/lib/python3.6/site-packages/dnf-plugins/getpagespeed.py \\
     && ${YUM} -y install ${PRE_PACKAGES} \\
     && ${YUM} -y install ${PACKAGES} \\
