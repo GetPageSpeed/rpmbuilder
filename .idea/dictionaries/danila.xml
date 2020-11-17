@@ -6,6 +6,7 @@
       <w>centos</w>
       <w>rpmdevtools</w>
       <w>rpmlint</w>
+      <w>versionlock</w>
     </words>
   </dictionary>
 </component>

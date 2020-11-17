@@ -44,6 +44,7 @@ function generate() {
             # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
             if [[ ${RELEASE_EPEL} -le 7 ]]; then
               # yum-plugin-versionlock required to freeze our patched version of yum-builddep script
+              # we also freeze "yum" for keeping User-Agent hack
               PACKAGES="${PACKAGES} yum-plugin-versionlock"
               if [[ "$DISTRO" == "amazonlinux" ]]; then
                 PRE_PACKAGES="${PRE_PACKAGES} centos-release-scl"
@@ -106,7 +107,7 @@ RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
         \${OUTPUT} \\
         \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true) \\
-    && (yum versionlock yum-utils || true) \\
+    && (yum versionlock yum yum-utils || true) \\
     && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-PowerTools.repo || true) \\
     && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
 
