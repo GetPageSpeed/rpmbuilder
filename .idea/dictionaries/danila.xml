@@ -5,6 +5,7 @@
       <w>builddep</w>
       <w>centos</w>
       <w>rpmdevtools</w>
+      <w>rpmlint</w>
     </words>
   </dictionary>
 </component>
