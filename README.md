@@ -12,6 +12,7 @@ This is different from upstream because:
 Available versions can be located by visiting [Docker Hub Repository](https://hub.docker.com/r/getpagespeed/rpmbuilder/tags/).
 
 ### Fetch image
+
 ```bash
 BUILDER_VERSION=centos-7
 docker pull GetPageSpeed/rpmbuilder:${BUILDER_VERSION}
