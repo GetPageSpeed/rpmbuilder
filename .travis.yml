@@ -1,9 +1,7 @@
-sudo: required
-
 language: generic
 
 env:
-  matrix:
+  jobs:
     - OS_TYPE=fedora OS_VERSION=31
     - OS_TYPE=amazonlinux OS_VERSION=2
     - OS_TYPE=centos OS_VERSION=8    
