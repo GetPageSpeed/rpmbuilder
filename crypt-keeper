@@ -107,6 +107,7 @@ RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true) \\
     && (yum versionlock yum yum-utils || true) \\
     && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-PowerTools.repo || true) \\
+    && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-Linux-PowerTools.repo || true) \\
     && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
