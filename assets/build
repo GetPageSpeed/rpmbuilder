@@ -6,6 +6,9 @@ set -exo pipefail
 SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 
+# https://docs.oracle.com/cd/E93554_01/E69348/html/uek4-czc_xmc_xt.html
+touch /var/lib/rpm/*
+
 # enable specified repositories before build
 if [[ -n ${ENABLE_REPOS} ]]; then
   RHEL=$(rpm -E '%{rhel}')
