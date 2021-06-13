@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
-
+# ping 1: rebuild for libarchive update
 DOCKER_REGISRY_USER=getpagespeed
 
 function generate() {
