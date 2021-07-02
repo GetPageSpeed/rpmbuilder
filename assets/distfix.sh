@@ -2,6 +2,7 @@
 
 if [[ $(rpm -E %{rhel}) == 6 ]]; then
   curl https://www.getpagespeed.com/files/centos6-eol.repo --output /etc/yum.repos.d/CentOS-Base.repo
+  rpm --rebuilddb && yum -y install yum-plugin-ovl
   yum -y install yum-plugin-ovl
   yum -y install centos-release-scl
   curl https://www.getpagespeed.com/files/centos6-scl-eol.repo --output /etc/yum.repos.d/CentOS-SCLo-scl.repo
