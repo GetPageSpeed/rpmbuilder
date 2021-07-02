@@ -1,6 +1,6 @@
 # RPM build containers for RedHat based various distros
 
-[![Build Status](https://travis-ci.org/GetPageSpeed/rpmbuilder.svg?branch=master)](https://travis-ci.org/GetPageSpeed/rpmbuilder) [![Docker Pulls](https://img.shields.io/docker/pulls/getpagespeed/rpmbuilder.svg)](https://hub.docker.com/r/getpagespeed/rpmbuilder/)
+[![CI](https://github.com/GetPageSpeed/rpmbuilder/actions/workflows/dockerbuild.yml/badge.svg)](https://github.com/GetPageSpeed/rpmbuilder/actions/workflows/dockerbuild.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/getpagespeed/rpmbuilder.svg)](https://hub.docker.com/r/getpagespeed/rpmbuilder/)
 
 This is different from upstream because:
 

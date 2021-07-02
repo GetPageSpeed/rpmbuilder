@@ -33,6 +33,7 @@ function generate() {
     cp -R ./assets ${ROOT}/.
     # cp LICENCE README.md
     YUM="yum"
+    # yum-utils is provided by "dnf-utils" in recent OS versions, but it always brings up yum-config-manager
     PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
     case "${DISTRO}" in
         amazonlinux|centos|cloudrouter*centos)
@@ -70,8 +71,10 @@ function generate() {
             ;;
     esac
     # header
+    FROM_DISTRO="${DISTRO}"
+    if [[ "${DISTRO}" = "centos" ]]; then FROM_DISTRO=oraclelinux; fi
     cat > ${DOCKERFILE} << EOF
-FROM ${DISTRO}:${RELEASE}
+FROM ${FROM_DISTRO}:${RELEASE}
 MAINTAINER "Danila Vershinin" <info@getpagespeed.com>
 
 ENV WORKSPACE=${WORKSPACE} \\
@@ -107,6 +110,7 @@ RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
     && (yum versionlock yum yum-utils || true) \\
     && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-PowerTools.repo || true) \\
     && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-Linux-PowerTools.repo || true) \\
+    && (yum-config-manager --enable ol8_codeready_builder || true) \\
     && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
