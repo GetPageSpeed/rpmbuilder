@@ -1,7 +1,7 @@
-name: Build & Deploy
+name: CI
 on: [push]
 jobs:
-  build-push-one:
+  one:
     runs-on: ubuntu-latest
     strategy:
       matrix:
