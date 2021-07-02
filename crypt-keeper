@@ -72,7 +72,7 @@ function generate() {
     esac
     # header
     FROM_DISTRO="${DISTRO}"
-    if [[ "${DISTRO}" = "centos" ]]; then FROM_DISTRO=oraclelinux; fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -ge 8 ]]; then FROM_DISTRO=oraclelinux; fi
     cat > ${DOCKERFILE} << EOF
 FROM ${FROM_DISTRO}:${RELEASE}
 MAINTAINER "Danila Vershinin" <info@getpagespeed.com>
@@ -108,8 +108,6 @@ RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
         \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true) \\
     && (yum versionlock yum yum-utils || true) \\
-    && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-PowerTools.repo || true) \\
-    && (sed -i 's@enabled=0@enabled=1@' /etc/yum.repos.d/CentOS-Linux-PowerTools.repo || true) \\
     && (yum-config-manager --enable ol8_codeready_builder || true) \\
     && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
 
