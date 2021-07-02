@@ -1,7 +1,7 @@
-name: Build Docker Images
+name: Build & Deploy
 on: [push]
 jobs:
-  build-one:
+  build-push-one:
     runs-on: ubuntu-latest
     strategy:
       matrix:
