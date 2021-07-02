@@ -1,4 +1,4 @@
-# RPM build containers for Red Hat based various distros
+# RPM build containers for RedHat based various distros
 
 [![Build Status](https://travis-ci.org/GetPageSpeed/rpmbuilder.svg?branch=master)](https://travis-ci.org/GetPageSpeed/rpmbuilder) [![Docker Pulls](https://img.shields.io/docker/pulls/getpagespeed/rpmbuilder.svg)](https://hub.docker.com/r/getpagespeed/rpmbuilder/)
 
