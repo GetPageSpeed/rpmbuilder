@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
-# ping 1: rebuild for libarchive update
-DOCKER_REGISRY_USER=getpagespeed
+DOCKER_REGISTRY_USER=getpagespeed
 
 function generate() {
     SOURCES=${SOURCES-/sources}
@@ -57,7 +56,7 @@ function generate() {
             PACKAGES="${PACKAGES} @buildsys-build git devtoolset-8-gcc-c++ devtoolset-8-binutils"
             if [[ ${RELEASE_EPEL} -ge 8 ]]; then
               YUM="dnf";
-              PACKAGES="'dnf-command(builddep)' gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua"
+              PACKAGES="'dnf-command(builddep)' gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
             fi
             # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
             # devtoolset-8 is for faster CI builds of packages that want to use it
@@ -125,7 +124,7 @@ function map-all() {
 function docker-image-name() {
     DISTRO=${1}
     VERSION=${2}
-    echo -n "${DOCKER_REGISRY_USER}/rpmbuilder:${DISTRO/\//-}-${VERSION}"
+    echo -n "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO/\//-}-${VERSION}"
 
 }
 

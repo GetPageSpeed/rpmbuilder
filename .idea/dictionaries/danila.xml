@@ -3,7 +3,9 @@
     <words>
       <w>amazonlinux</w>
       <w>builddep</w>
+      <w>buildsys</w>
       <w>centos</w>
+      <w>libarchive</w>
       <w>rpmdevtools</w>
       <w>rpmlint</w>
       <w>versionlock</w>
