@@ -7,6 +7,7 @@
       <w>centos</w>
       <w>libarchive</w>
       <w>powertools</w>
+      <w>rockylinux</w>
       <w>rpmbuilder</w>
       <w>rpmdevtools</w>
       <w>rpmlint</w>
