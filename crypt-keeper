@@ -72,7 +72,11 @@ function generate() {
     esac
     # header
     FROM_DISTRO="${DISTRO}"
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -ge 8 ]]; then FROM_DISTRO=oraclelinux; fi
+    # Rocky Linux vs Oracle Linux. The selinux-policy in Oracle Linux has "bad" release
+    # Instead of 3.14.3-67.el8, it is  3.14.3-67.0.1.el8
+    # This makes %_selinux_policy_version usage cause issues with -selinux packages
+    # Rocky Linux is closer to upstream in these regards and no issues, so we use it.
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -ge 8 ]]; then FROM_DISTRO=rockylinux; fi
     cat > ${DOCKERFILE} << EOF
 FROM ${FROM_DISTRO}:${RELEASE}
 MAINTAINER "Danila Vershinin" <info@getpagespeed.com>
@@ -108,7 +112,7 @@ RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
         \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true) \\
     && (yum versionlock yum yum-utils || true) \\
-    && (yum-config-manager --enable ol8_codeready_builder || true) \\
+    && (yum-config-manager --enable powertools || true) \\
     && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
