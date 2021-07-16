@@ -67,7 +67,7 @@ function generate() {
             # Just a dummy pre-install to simplify RUN step below
             PRE_PRE_PACKAGES="dnf"
             PRE_PACKAGES="'dnf-command(builddep)'"
-            PACKAGES="rpmlint rpmdevtools";
+            PACKAGES="rpmlint git rpmdevtools";
             ;;
     esac
     # header
