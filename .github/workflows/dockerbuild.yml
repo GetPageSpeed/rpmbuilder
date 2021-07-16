@@ -11,7 +11,7 @@ jobs:
           - os: fedora
             version: 33
           - os: fedora
-            verion: 34
+            version: 34
           - os: amazonlinux
             version: 2
     steps:
