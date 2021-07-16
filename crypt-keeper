@@ -67,7 +67,7 @@ function generate() {
             # Just a dummy pre-install to simplify RUN step below
             PRE_PRE_PACKAGES="dnf"
             PRE_PACKAGES="'dnf-command(builddep)'"
-            PACKAGES="'dnf-command(builddep)' gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
+            PACKAGES="'dnf-command(builddep)' gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
             ;;
     esac
     # header
