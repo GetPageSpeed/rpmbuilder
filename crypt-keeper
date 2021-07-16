@@ -62,7 +62,7 @@ function generate() {
             # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
             # devtoolset-8 is for faster CI builds of packages that want to use it
             ;;
-        fedora)
+        fedora|mageia)
             YUM="dnf";
             # Just a dummy pre-install to simplify RUN step below
             PRE_PRE_PACKAGES="dnf"
