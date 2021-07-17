@@ -14,8 +14,6 @@ jobs:
             version: 34
           - os: amazonlinux
             version: 2
-          - os: mageia
-            version: 8
     steps:
       - uses: actions/checkout@v2
       - name: Generate Dockerfile
