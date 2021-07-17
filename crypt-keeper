@@ -33,6 +33,7 @@ function generate() {
     cp -R ./assets ${ROOT}/.
     # cp LICENCE README.md
     YUM="yum"
+    CONFIG_MANAGER="yum-config-manager"
     # yum-utils is provided by "dnf-utils" in recent OS versions, but it always brings up yum-config-manager
     PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
     case "${DISTRO}" in
@@ -57,6 +58,7 @@ function generate() {
             PACKAGES="${PACKAGES} @buildsys-build git devtoolset-8-gcc-c++ devtoolset-8-binutils"
             if [[ ${RELEASE_EPEL} -ge 8 ]]; then
               YUM="dnf";
+              CONFIG_MANAGER="dnf config-manager"
               PACKAGES="'dnf-command(builddep)' gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
             fi
             # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
@@ -112,7 +114,7 @@ RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
         \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \\
     && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true) \\
     && (yum versionlock yum yum-utils || true) \\
-    && (yum-config-manager --enable powertools || true) \\
+    && (${CONFIG_MANAGER} --enable powertools || true) \\
     && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
