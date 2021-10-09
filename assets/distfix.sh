@@ -14,6 +14,13 @@ if [[ $(rpm -E %{rhel}) == 6 ]]; then
   yum clean all
 fi
 
+
+if [[ $(rpm -E %{rhel}) == 8 ]]; then
+  # mirrorlist service is very often 503. avoid it by direct use
+  sed -i 's@^#baseurl@baseurl@g' /etc/yum.repos.d/Rocky-*.repo
+  sed -i 's@^mirrorlist@#mirrorlist@g' /etc/yum.repos.d/Rocky-*.repo
+fi
+
 sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.7/site-packages/yum/__init__.py  ||:
 sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.6/site-packages/yum/__init__.py  ||:
 stat /usr/lib/python3.6/site-packages/dnf-plugins && cp /tmp/rpmbuilder_ua.py /usr/lib/python3.6/site-packages/dnf-plugins/  ||:
