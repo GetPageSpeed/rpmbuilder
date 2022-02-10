@@ -9,9 +9,9 @@ jobs:
         version: [6, 7, 8]
         include:
           - os: fedora
-            version: 33
-          - os: fedora
             version: 34
+          - os: fedora
+            version: 35
           - os: amazonlinux
             version: 2
     steps:
