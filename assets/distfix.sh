@@ -1,5 +1,18 @@
 #!/bin/bash
 
+if [ -e /etc/os-release ]; then
+   . /etc/os-release
+else
+   . /usr/lib/os-release
+fi
+
+if [ "$ID" = "opensuse-leap" ]; then
+    echo "Do something Leap specific"
+    zypper --non-interactive install dnf libdnf-repo-config-zypp
+    # this repo has None for type=
+    rm -rf /etc/zypp/repos.d/repo-backports-debug-update.repo
+fi
+
 if [[ $(rpm -E %{rhel}) == 6 ]]; then
   curl https://www.getpagespeed.com/files/centos6-eol.repo --output /etc/yum.repos.d/CentOS-Base.repo
   rpm --rebuilddb && yum -y install yum-plugin-ovl
