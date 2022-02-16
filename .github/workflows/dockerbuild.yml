@@ -14,6 +14,8 @@ jobs:
             version: 35
           - os: amazonlinux
             version: 2
+          - os: opensuse/leap
+            version: 15
     steps:
       - uses: actions/checkout@v2
       - name: Generate Dockerfile
