@@ -164,7 +164,7 @@ function build() {
 function push() {
     DISTRO=${1}
     VERSION=${2}
-    docker push --all-tags $(docker-image-name ${DISTRO} ${VERSION})
+    docker push --all-tags # $(docker-image-name ${DISTRO} ${VERSION})
 }
 
 case "$1" in
