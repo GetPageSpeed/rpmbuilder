@@ -2,6 +2,8 @@
 set -eo pipefail
 DOCKER_REGISTRY_USER=getpagespeed
 
+declare -A DISTRO_DISTS=( [centos]=el [fedora]=fc [amazonlinux]=amzn [opensuse]=sles )
+
 function generate() {
     SOURCES=${SOURCES-/sources}
     OUTPUT=${OUTPUT-/output}
@@ -142,14 +144,20 @@ function docker-image-name() {
     DISTRO=${1}
     VERSION=${2}
     echo -n "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO/\//-}-${VERSION}"
+}
 
+function docker-image-alt-name() {
+    DISTRO=${1}
+    VERSION=${2}
+    DIST=${DISTRO_DISTS[DISTRO]}
+    echo -n "${DOCKER_REGISTRY_USER}/rpmbuilder:${DIST}${VERSION}"
 }
 
 function build() {
     DISTRO=${1}
     VERSION=${2}
-    cd ${DISTRO}/${VERSION} \
-        && docker build -t $(docker-image-name ${DISTRO} ${VERSION}) .
+    cd "${DISTRO}/${VERSION}" \
+        && docker build -t $(docker-image-name ${DISTRO} ${VERSION}) -t $(docker-image-alt-name ${DISTRO} ${VERSION}) .
     cd -
 }
 
