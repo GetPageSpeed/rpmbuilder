@@ -90,7 +90,11 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # SRPM built successfully. Check it using rpmlint
-    rpmlint ${RPM_BUILD_SRPMS}/*.rpm
+    if test -f /etc/rpmlint/custom.config && test -d /etc/xdg/rpmlint; then
+      rpmlint "${RPM_BUILD_SRPMS}/*.rpm" --rpmlintrc /etc/rpmlint/custom.config
+    else
+      rpmlint "${RPM_BUILD_SRPMS}/*.rpm"
+    fi
   fi
 
   mv ${RPM_BUILD_SRPMS}/*.rpm ${OUTPUT}
