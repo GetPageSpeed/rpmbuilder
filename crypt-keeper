@@ -110,6 +110,7 @@ ADD ./assets/rpmlint.config /etc/rpmlint/config
 ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
 ADD ./assets/rpmbuilder_ua.py /tmp/rpmbuilder_ua.py
 ADD ./assets/distfix.sh /tmp/distfix.sh
+ADD ./assets/post_distfix.sh /tmp/post_distfix.sh
 
 RUN /tmp/distfix.sh
 
@@ -127,6 +128,8 @@ RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
     && (yum versionlock yum yum-utils || true) \\
     && (${CONFIG_MANAGER} --enable powertools || true) \\
     && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
+
+RUN /tmp/post_distfix.sh
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
