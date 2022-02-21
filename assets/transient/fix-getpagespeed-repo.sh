@@ -7,6 +7,10 @@ RHEL=$(rpm -E 0%{?rhel})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
 
+if [[ $(rpm -E %{amzn}) == 2 ]]; then
+  sed -i "s@redhat/7@amzn/2@g" /etc/yum.repos.d/getpagespeed-extras.repo
+fi
+
 if ((RHEL >= 0 && RHEL <= 7)); then
   # set up desired user-agent by patching yum
   sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.*/site-packages/yum/__init__.py
@@ -18,10 +22,6 @@ if ((RHEL >= 0 && RHEL <= 7)); then
   yum versionlock yum yum-utils
 fi
 
-
-if [[ $(rpm -E %{amzn}) == 2 ]]; then
-  sed -i "s@redhat/7@amzn/2@g" /etc/yum.repos.d/getpagespeed-extras.repo
-fi
 
 # for any DNF client, copy in custom user-agent plugin for DNF
 # and overwrite our plugin in the process
