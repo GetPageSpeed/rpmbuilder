@@ -1,5 +1,7 @@
 #!/bin/bash
 
+${YUM} -y install ${PRE_PRE_PACKAGES}
+
 if [ -e /etc/os-release ]; then
    . /etc/os-release
 else
