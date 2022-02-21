@@ -11,7 +11,7 @@ if [[ $(rpm -E %{amzn}) == 2 ]]; then
   sed -i "s@redhat/7@amzn/2@g" /etc/yum.repos.d/getpagespeed-extras.repo
 fi
 
-if ((RHEL >= 0 && RHEL <= 7)); then
+if ((RHEL > 0 && RHEL <= 7)); then
   # set up desired user-agent by patching yum
   sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.*/site-packages/yum/__init__.py
   # remove our plugin
