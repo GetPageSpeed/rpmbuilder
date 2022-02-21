@@ -7,7 +7,7 @@ RHEL=$(rpm -E 0%{?rhel})
 RHEL=${RHEL##+(0)}
 echo $RHEL
 
-if ((RHEL >= 0 && RHEL <= 7)); then
+if ((RHEL > 0 && RHEL <= 7)); then
   patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch
   # because we patched yum, versionlock ше:
   yum -y install yum-plugin-versionlock
