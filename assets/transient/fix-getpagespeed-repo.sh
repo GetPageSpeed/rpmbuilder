@@ -16,6 +16,8 @@ if ((RHEL >= 0 && RHEL <= 7)); then
   # because we patched yum, versionlock ше:
   yum -y install yum-plugin-versionlock
   yum versionlock yum yum-utils
+fi
+
 
 if [[ $(rpm -E %{amzn}) == 2 ]]; then
   sed -i "s@redhat/7@amzn/2@g" /etc/yum.repos.d/getpagespeed-extras.repo
