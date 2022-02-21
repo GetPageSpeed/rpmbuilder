@@ -13,7 +13,8 @@ fi
 
 if ((RHEL > 0 && RHEL <= 7)); then
   # set up desired user-agent by patching yum
-  sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent = "rpmbuilder"@' /usr/lib/python2.*/site-packages/yum/__init__.py
+  sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent = "XXXXXXXXXX"@' \
+    /usr/lib/python2.*/site-packages/yum/__init__.py
   # remove our plugin
   rm -rf /usr/lib/yum-plugins/getpagespeed.py* /etc/yum/pluginconf.d/getpagespeed.conf
   # because we patched yum, versionlock it:
@@ -22,14 +23,13 @@ if ((RHEL > 0 && RHEL <= 7)); then
   yum versionlock yum yum-utils
 fi
 
-
 # for any DNF client, copy in custom user-agent plugin for DNF
 # and overwrite our plugin in the process
 DNF_PLUGINS_DIR="/usr/lib/python*/site-packages/dnf-plugins"
 if test -f "/usr/bin/dnf"; then
   for D in $DNF_PLUGINS_DIR; do
     if test -d "$D"; then
-      \cp -f /tmp/rpmbuilder-ua.py $D/getpagespeed.py;
+      \cp -f /tmp/user-agent.py $D/getpagespeed.py;
     fi
   done
 fi

@@ -6,4 +6,4 @@ class RpmBuilderUa(dnf.Plugin):
 
     def config(self):
         repos = self.base.repos.get_matching('getpagespeed-*')
-        repos.set_http_headers(["User-Agent: rpmbuilder"])
+        repos.set_http_headers(["User-Agent: XXXXXXXXXX"])

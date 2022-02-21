@@ -1,4 +1,15 @@
 #!/bin/bash
+shopt -s extglob
+
+if test -f /etc/os-release; then
+   . /etc/os-release
+elif test -f /usr/lib/os-release; then
+   . /usr/lib/os-release
+fi
+
+RHEL=$(rpm -E 0%{?rhel})
+# removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
+RHEL=${RHEL##+(0)}
 
 PKGR="yum"
 CONFIG_MANAGER="yum-config-manager"
@@ -49,10 +60,36 @@ case "${DISTRO}" in
         ;;
 esac
 
-/tmp/distfix.sh
+# Fix up base repos in a way that we can install any packages at all ...
+
+if [ "$ID" = "opensuse-leap" ]; then
+    echo "Do something Leap specific"
+    zypper --non-interactive install dnf libdnf-repo-config-zypp
+    # this repo has None for type=
+    rm -rf /etc/zypp/repos.d/repo-backports-debug-update.repo
+fi
+
+
+if [[ $RHEL == 6 ]]; then
+  curl https://www.getpagespeed.com/files/centos6-eol.repo --output /etc/yum.repos.d/CentOS-Base.repo
+  rpm --rebuilddb && yum -y install yum-plugin-ovl
+  yum -y install yum-plugin-ovl
+  yum -y install centos-release-scl
+  curl https://www.getpagespeed.com/files/centos6-scl-eol.repo --output /etc/yum.repos.d/CentOS-SCLo-scl.repo
+  curl https://www.getpagespeed.com/files/centos6-scl-rh-eol.repo --output /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+
+  yum -y install epel-release
+  curl https://www.getpagespeed.com/files/centos6-epel-eol.repo --output /etc/yum.repos.d/epel.repo
+fi
+
+if [[ $RHEL == 8 ]]; then
+  # mirrorlist service is very often 503. avoid it by direct use
+  sed -i 's@^#baseurl@baseurl@g' /etc/yum.repos.d/Rocky-*.repo
+  sed -i 's@^mirrorlist@#mirrorlist@g' /etc/yum.repos.d/Rocky-*.repo
+fi
 
 if [[ $PKGR == "dnf" ]]; then
-  # dnf-command(builddep)'
+  # dnf-command(builddep)' and 'dnf-command(config-manager)'
   $PKGR -y install dnf-plugins-core
 fi
 
@@ -67,6 +104,22 @@ ${PKGR} -y install ${PACKAGES}
 ln -sf ${RPM_BUILD_DIR} /root/rpmbuild
 mkdir -p ${SOURCES} ${WORKSPACE} ${OUTPUT} ${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
-/tmp/post-distfix.sh
+# Fix up things so that things work fine and do not break while building
+# Ensures required default repos as well
+
+if ((RHEL > 0 && RHEL <= 7)); then
+  patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch
+  # because we patched yum, versionlock ше:
+  yum -y install yum-plugin-versionlock
+  yum versionlock yum-utils
+fi
+
+if (( RHEL >= 8 )); then
+  dnf config-manager --enable powertools
+fi
+
+if test -f /etc/dnf/dnf.conf; then
+  sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf
+fi
 
 ${PKGR} -y clean all && rm -rf /tmp/* && rm -rf /var/cache/*

@@ -18,6 +18,10 @@ jobs:
             version: 15
     steps:
       - uses: actions/checkout@v2
+      - name: "Set up RPM client User-Agent for images"
+        run: |
+          sed -i 's@XXXXXXXXXX@rpmbuilder@g' assets/transient/fix-getpagespeed-repo.sh
+          sed -i 's@XXXXXXXXXX@rpmbuilder@g' assets/transient/user-agent.py
       - name: Generate Dockerfile
         run: ./crypt-keeper.sh generate ${{ matrix.os }} ${{ matrix.version }}
       - name: Build Docker image
