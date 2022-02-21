@@ -1,9 +1,9 @@
 #!/bin/bash
 # Fix up base repos in a way that we can install any packages at all ...
-
-if [ -e /etc/os-release ]; then
+shopt -s extglob
+if test -f /etc/os-release; then
    . /etc/os-release
-else
+elif test -f /usr/lib/os-release; then
    . /usr/lib/os-release
 fi
 

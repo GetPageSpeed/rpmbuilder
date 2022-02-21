@@ -1,7 +1,7 @@
 #!/bin/bash
 # Fix up things so that things work fine and do not break while building
 # Ensures required default repos as well
-
+shopt -s extglob
 RHEL=$(rpm -E 0%{?rhel})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}

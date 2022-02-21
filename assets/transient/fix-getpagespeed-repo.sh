@@ -2,7 +2,7 @@
 # Basically fixes up GetPageSpeed repo usage from these images
 # by removing plugin and setting up the desired user-agent
 # Runs after installation of release package
-
+shopt -s extglob
 RHEL=$(rpm -E 0%{?rhel})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
