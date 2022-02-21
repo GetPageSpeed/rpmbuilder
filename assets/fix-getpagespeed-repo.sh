@@ -27,7 +27,7 @@ DNF_PLUGINS_DIR="/usr/lib/python*/site-packages/dnf-plugins"
 if test -f "/usr/bin/dnf"; then
   for D in $DNF_PLUGINS_DIR; do
     if test -d "$D"; then
-      \cp -f /tmp/rpmbuilder_ua.py $D/getpagespeed.py;
+      \cp -f /tmp/rpmbuilder-ua.py $D/getpagespeed.py;
     fi
   done
 fi

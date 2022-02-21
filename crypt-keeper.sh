@@ -108,9 +108,9 @@ ADD ./assets/build /usr/bin/build
 ADD ./assets/rpmlint.config /etc/rpmlint/config
 # patch for yum-builddep to NOT enable source repos if .spec file is used (fixes a bug)
 ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
-ADD ./assets/rpmbuilder_ua.py /tmp/rpmbuilder_ua.py
+ADD ./assets/rpmbuilder_ua.py /tmp/rpmbuilder-ua.py
 ADD ./assets/distfix.sh /tmp/distfix.sh
-ADD ./assets/post_distfix.sh /tmp/post_distfix.sh
+ADD ./assets/post_distfix.sh /tmp/post-distfix.sh
 ADD ./assets/fix-getpagespeed-repo.sh /tmp/fix-getpagespeed-repo.sh
 
 RUN /tmp/distfix.sh \\
@@ -123,8 +123,8 @@ RUN /tmp/distfix.sh \\
         \${WORKSPACE} \\
         \${OUTPUT} \\
         \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \\
-    && /tmp/post_distfix.sh \\
-    && ${YUM} -y clean all \\
+    && /tmp/post-distfix.sh \\
+    && ${YUM} -y clean all && rm -rf /tmp/* && rm -rf /var/cache/*
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
