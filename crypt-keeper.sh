@@ -108,7 +108,7 @@ ADD ./assets/build /usr/bin/build
 ADD ./assets/rpmlint.config /etc/rpmlint/config
 # patch for yum-builddep to NOT enable source repos if .spec file is used (fixes a bug)
 ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
-ADD ./assets/rpmbuilder_ua.py /tmp/rpmbuilder-ua.py
+ADD ./assets/rpmbuilder-ua.py /tmp/rpmbuilder-ua.py
 ADD ./assets/distfix.sh /tmp/distfix.sh
 ADD ./assets/post_distfix.sh /tmp/post-distfix.sh
 ADD ./assets/fix-getpagespeed-repo.sh /tmp/fix-getpagespeed-repo.sh
