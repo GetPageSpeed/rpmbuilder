@@ -6,6 +6,7 @@
       <w>buildsys</w>
       <w>centos</w>
       <w>devtoolset</w>
+      <w>distfix</w>
       <w>libarchive</w>
       <w>mirrorlist</w>
       <w>powertools</w>

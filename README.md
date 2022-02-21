@@ -5,7 +5,8 @@
 This is different from upstream because:
 
 * it allows for faster failed builds: a failed build can be detected early through building SRPM first, as well as optional `rpmlint` checks. In the upstream docker image, a failed build will have an exit status code of 0, so CI tools will not be able to detect failed builds to begin with.
-* a patch is applied to `yum-builddep` to prevent unnecessary enablement of `-source` repos, to facilitate faster builds
+* a patch is applied to `yum-builddep` to prevent unnecessary enablement of `-source` repos, to facilitate faster builds.
+, the patch for yum-builddep to NOT enable source repos if .spec file is used (fixes a bug)
 
 ### Available versions
 

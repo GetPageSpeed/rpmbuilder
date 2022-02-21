@@ -99,19 +99,9 @@ ENV WORKSPACE=${WORKSPACE} \\
     OUTPUT=${OUTPUT} \\
     RPM_BUILD_DIR=${RPM_BUILD_DIR}
 
-# this is required to disable source repos that yum-builddep unnecessarily enables. this is no longer required. see patch below
-# RUN rm -rf /etc/yum.repos.d/{CentOS-Sources.repo,CentOS-Sources.repo} $(test "$EXTRA_RELEASES" && echo "&& yum -y install ${EXTRA_RELEASES}")
-# RUN [ -f "/etc/yum.repos.d/CentOS-SCLo-scl-rh.repo" ] && sed -i '/centos-sclo-rh-source/,//d' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
-# RUN [ -f "/etc/yum.repos.d/CentOS-SCLo-scl.repo" ] && sed -i '/centos-sclo-sclo-source/,//d' /etc/yum.repos.d/CentOS-SCLo-scl.repo
-
 ADD ./assets/build /usr/bin/build
 ADD ./assets/rpmlint.config /etc/rpmlint/config
-# patch for yum-builddep to NOT enable source repos if .spec file is used (fixes a bug)
-ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
-ADD ./assets/rpmbuilder-ua.py /tmp/rpmbuilder-ua.py
-ADD ./assets/distfix.sh /tmp/distfix.sh
-ADD ./assets/post_distfix.sh /tmp/post-distfix.sh
-ADD ./assets/fix-getpagespeed-repo.sh /tmp/fix-getpagespeed-repo.sh
+ADD ./assets/transient/* /tmp/
 
 RUN /tmp/distfix.sh \\
     && ${YUM} -y install ${PRE_PRE_PACKAGES} \\
