@@ -106,30 +106,25 @@ ENV WORKSPACE=${WORKSPACE} \\
 
 ADD ./assets/build /usr/bin/build
 ADD ./assets/rpmlint.config /etc/rpmlint/config
-# patch yum-builddep to NOT enable source repos if .spec file is used (fixes a bug)
+# patch for yum-builddep to NOT enable source repos if .spec file is used (fixes a bug)
 ADD ./assets/yum-builddep.patch /tmp/yum-builddep.patch
 ADD ./assets/rpmbuilder_ua.py /tmp/rpmbuilder_ua.py
 ADD ./assets/distfix.sh /tmp/distfix.sh
 ADD ./assets/post_distfix.sh /tmp/post_distfix.sh
+ADD ./assets/fix-getpagespeed-repo.sh /tmp/fix-getpagespeed-repo.sh
 
-RUN /tmp/distfix.sh
-
-RUN ${YUM} -y install ${PRE_PRE_PACKAGES} \\
-    && rm -rf /usr/lib/yum-plugins/getpagespeed.py* /etc/yum/pluginconf.d/getpagespeed.conf /usr/lib/python3.6/site-packages/dnf-plugins/getpagespeed.py \\
+RUN /tmp/distfix.sh \\
+    && ${YUM} -y install ${PRE_PRE_PACKAGES} \\
+    && /tmp/fix-getpagespeed-repo.sh \\
     && ${YUM} -y install ${PRE_PACKAGES} \\
     && ${YUM} -y install ${PACKAGES} \\
-    && ${YUM} -y clean all \\
     && ln -sf \${RPM_BUILD_DIR} /root/rpmbuild \\
     && mkdir -p \${SOURCES} \\
         \${WORKSPACE} \\
         \${OUTPUT} \\
         \${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \\
-    && (patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch || true) \\
-    && (yum versionlock yum yum-utils || true) \\
-    && (${CONFIG_MANAGER} --enable powertools || true) \\
-    && (sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf || true)
-
-RUN /tmp/post_distfix.sh
+    && /tmp/post_distfix.sh \\
+    && ${YUM} -y clean all \\
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
