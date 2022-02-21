@@ -1,6 +1,6 @@
 #!/bin/bash
 
-YUM="yum"
+PKGR="yum"
 CONFIG_MANAGER="yum-config-manager"
 # yum-utils is provided by "dnf-utils" in recent OS versions, but it always brings up yum-config-manager
 PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
@@ -25,43 +25,48 @@ case "${DISTRO}" in
         # We threw latest git to our EL6 repo (clean Fedora rebuilt)
         PACKAGES="${PACKAGES} @buildsys-build git devtoolset-8-gcc-c++ devtoolset-8-binutils"
         if [[ ${RELEASE_EPEL} -ge 8 ]]; then
-          YUM="dnf";
+          PKGR="dnf";
           CONFIG_MANAGER="dnf config-manager"
-          PACKAGES="'dnf-command(builddep)' gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
+          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
         fi
         # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
         # devtoolset-8 is for faster CI builds of packages that want to use it
         ;;
     fedora|mageia)
-        YUM="dnf";
+        PKGR="dnf";
         # Just a dummy pre-install to simplify RUN step below
         PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
-        PRE_PACKAGES="'dnf-command(builddep)'"
-        PACKAGES="'dnf-command(builddep)' gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
+        PRE_PACKAGES="dnf-plugins-core"
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
         ;;
     opensuse)
-        YUM="dnf"
+        PKGR="dnf"
         # "zypper --non-interactive"
         # Just a dummy pre-install to simplify RUN step below
         PRE_PRE_PACKAGES="dnf"
-        PRE_PACKAGES="'dnf-command(builddep)'"
-        PACKAGES="'dnf-command(builddep)' gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua"
+        PRE_PACKAGES="dnf-plugins-core"
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua"
         ;;
 esac
 
 /tmp/distfix.sh
 
-${YUM} -y install ${PRE_PRE_PACKAGES}
+if [[ $PKGR == "dnf" ]]; then
+  # dnf-command(builddep)'
+  $PKGR -y install dnf-plugins-core
+fi
+
+${PKGR} -y install ${PRE_PRE_PACKAGES}
 
 /tmp/fix-getpagespeed-repo.sh
 
-${YUM} -y install ${PRE_PACKAGES}
+${PKGR} -y install ${PRE_PACKAGES}
 
-${YUM} -y install ${PACKAGES}
+${PKGR} -y install ${PACKAGES}
 
 ln -sf ${RPM_BUILD_DIR} /root/rpmbuild
 mkdir -p ${SOURCES} ${WORKSPACE} ${OUTPUT} ${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
 /tmp/post-distfix.sh
 
-${YUM} -y clean all && rm -rf /tmp/* && rm -rf /var/cache/*
+${PKGR} -y clean all && rm -rf /tmp/* && rm -rf /var/cache/*
