@@ -91,9 +91,12 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # SRPM built successfully. Check it using rpmlint
     if test -f /etc/rpmlint/custom.config && test -d /etc/xdg/rpmlint; then
-      rpmlint "${RPM_BUILD_SRPMS}/*.rpm" --rpmlintrc /etc/rpmlint/custom.config
+      # if we quote the wildcard in the argument to rpmlint, it will trigger
+      # to E: multiple-specfiles
+      # so we need to ensure bash wildcard is used/unquoted
+      rpmlint "{RPM_BUILD_SRPMS}"/*.rpm --rpmlintrc /etc/rpmlint/custom.config
     else
-      rpmlint "${RPM_BUILD_SRPMS}/*.rpm"
+      rpmlint "${RPM_BUILD_SRPMS}"/*.rpm
     fi
   fi
 
