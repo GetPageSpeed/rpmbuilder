@@ -12,8 +12,8 @@ function generate() {
 
     DISTRO=${1-fedora}
     RELEASE=${2-latest}
-    # Last EPEL is 8 so far:
-    RELEASE_EPEL=${2-8}
+    # Last EPEL is 9 so far:
+    RELEASE_EPEL=${2-9}
 
     if [[ "$DISTRO" == "amazonlinux" ]]; then
         case "$RELEASE" in
@@ -41,7 +41,8 @@ function generate() {
     # Instead of 3.14.3-67.el8, it is  3.14.3-67.0.1.el8
     # This makes %_selinux_policy_version usage cause issues with -selinux packages
     # Rocky Linux is closer to upstream in these regards and no issues, so we use it.
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -ge 8 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="quay.io/centos/centos:stream9"; fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
     cat > ${DOCKERFILE} << EOF
 FROM ${FROM_DISTRO}:${RELEASE}

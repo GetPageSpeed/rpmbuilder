@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         os: [centos]
-        version: [6, 7, 8]
+        version: [6, 7, 8, 9]
         include:
           - os: fedora
             version: 34
