@@ -62,11 +62,13 @@ esac
 
 # Fix up base repos in a way that we can install any packages at all ...
 
-if [ "$ID" = "opensuse-leap" ]; then
-    echo "Do something Leap specific"
-    zypper --non-interactive install dnf libdnf-repo-config-zypp
-    # this repo has None for type=
-    rm -rf /etc/zypp/repos.d/repo-backports-debug-update.repo
+if test -n "${ID-}"; then
+  if [ "$ID" = "opensuse-leap" ]; then
+      echo "Do something Leap specific"
+      zypper --non-interactive install dnf libdnf-repo-config-zypp
+      # this repo has None for type=
+      rm -rf /etc/zypp/repos.d/repo-backports-debug-update.repo
+  fi
 fi
 
 
