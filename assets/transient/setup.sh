@@ -43,9 +43,7 @@ case "${DISTRO}" in
         if [[ ${RELEASE_EPEL} -eq 8 ]]; then
           PACKAGES="${PACKAGES} python27"
         fi
-        if [[ ${RELEASE_EPEL} -eq 9 ]]; then
-          PACKAGES="${PACKAGES} python2.7"
-        fi
+        # no Python 2 in EL 8?
         # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
         # devtoolset-8 is for faster CI builds of packages that want to use it
         ;;
