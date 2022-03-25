@@ -124,7 +124,7 @@ if (( RHEL == 8 )); then
   dnf config-manager --enable powertools
 fi
 
-if (( RHEL >= 8 )); then
+if (( RHEL >= 9 )); then
   dnf config-manager --enable crb
 fi
 
