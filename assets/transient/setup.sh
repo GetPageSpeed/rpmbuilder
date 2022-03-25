@@ -114,8 +114,12 @@ if ((RHEL > 0 && RHEL <= 7)); then
   yum versionlock yum-utils
 fi
 
-if (( RHEL >= 8 )); then
+if (( RHEL == 8 )); then
   dnf config-manager --enable powertools
+fi
+
+if (( RHEL >= 8 )); then
+  dnf config-manager --enable crb
 fi
 
 if test -f /etc/dnf/dnf.conf; then
