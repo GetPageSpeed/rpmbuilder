@@ -1,6 +1,6 @@
 #!/bin/bash
 shopt -s extglob
-
+set -euxo pipefail
 if test -f /etc/os-release; then
    . /etc/os-release
 elif test -f /usr/lib/os-release; then
@@ -38,7 +38,7 @@ case "${DISTRO}" in
         if [[ ${RELEASE_EPEL} -ge 8 ]]; then
           PKGR="dnf";
           CONFIG_MANAGER="dnf config-manager"
-          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
+          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive"
         fi
         # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
         # devtoolset-8 is for faster CI builds of packages that want to use it
@@ -48,7 +48,7 @@ case "${DISTRO}" in
         # Just a dummy pre-install to simplify RUN step below
         PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
-        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python27 lua libarchive"
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive"
         ;;
     opensuse)
         PKGR="dnf"
