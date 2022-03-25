@@ -38,7 +38,13 @@ case "${DISTRO}" in
         if [[ ${RELEASE_EPEL} -ge 8 ]]; then
           PKGR="dnf";
           CONFIG_MANAGER="dnf config-manager"
-          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive"
+          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
+        fi
+        if [[ ${RELEASE_EPEL} -eq 8 ]]; then
+          PACKAGES="${PACKAGES} python27"
+        fi
+        if [[ ${RELEASE_EPEL} -eq 9 ]]; then
+          PACKAGES="${PACKAGES} python2.7"
         fi
         # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
         # devtoolset-8 is for faster CI builds of packages that want to use it
