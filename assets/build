@@ -6,6 +6,8 @@ set -exo pipefail
 SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 
+PKGR=yum
+
 # https://docs.oracle.com/cd/E93554_01/E69348/html/uek4-czc_xmc_xt.html
 touch /var/lib/rpm/*
 
@@ -71,14 +73,14 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   # install build requires
   if ! ${BUILDDEP_CMD} -y $specFile; then
-    yum clean all
+    ${PKGR} clean all
     ${BUILDDEP_CMD} -y $specFile
   fi
   
   # repeat step for chosen arch
   if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
     if ! ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile; then
-      yum clean all
+      ${PKGR} clean all
       ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile
     fi
   fi

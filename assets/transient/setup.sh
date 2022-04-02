@@ -60,7 +60,7 @@ case "${DISTRO}" in
         # Just a dummy pre-install to simplify RUN step below
         PRE_PRE_PACKAGES="dnf"
         PRE_PACKAGES="dnf-plugins-core"
-        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua"
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua spectool"
         ;;
 esac
 
@@ -133,3 +133,6 @@ if test -f /etc/dnf/dnf.conf; then
 fi
 
 ${PKGR} -y clean all && rm -rf /tmp/* && rm -rf /var/cache/*
+
+# fix up /usr/bin/build with the right packager
+sed -i -r "s@^PKGR=yum@PKGR=${PKGR}@" /usr/bin/build
