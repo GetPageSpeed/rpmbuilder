@@ -16,7 +16,7 @@ if [[ $(rpm -E %{amzn}) == 2 ]]; then
 fi
 
 if ((SLES > 0)); then
-cat << 'EOF' > /etc/yum/repos.d/repo-getpagespeed-extras.repo
+cat << 'EOF' > /etc/zypp/repos.d/repo-getpagespeed-extras.repo
 [repo-getpagespeed-extras-noarch]
 name=GetPageSpeed Extras Repository noarch
 enabled=1
