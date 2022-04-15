@@ -132,7 +132,9 @@ if test -f /etc/dnf/dnf.conf; then
   sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf
 fi
 
-${PKGR} -y clean all && rm -rf /tmp/* && rm -rf /var/cache/*
+# ${PKGR} -y clean all && rm -rf /tmp/* && rm -rf /var/cache/*
+# we will create images on schedule to facilitate faster builds that do not need fetching meta on every build
+${PKGR} --disablerepo "getpagespeed*" makecache
 
 # fix up /usr/bin/build with the right packager
 sed -i -r "s@^PKGR=yum@PKGR=${PKGR}@" /usr/bin/build

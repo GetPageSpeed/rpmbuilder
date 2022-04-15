@@ -1,5 +1,8 @@
 name: CI
-on: [push]
+on:
+  push
+  schedule:
+    - cron: "35 4 * * *"
 jobs:
   one:
     runs-on: ubuntu-latest
