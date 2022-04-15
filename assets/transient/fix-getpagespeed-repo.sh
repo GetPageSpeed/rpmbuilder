@@ -32,6 +32,9 @@ EOF
 zypper -n install axel
 axel https://extras.getpagespeed.com/RPM-GPG-KEY-GETPAGESPEED
 rpm --import RPM-GPG-KEY-GETPAGESPEED
+# 1500 => 15
+SLES_MAJOR=${SLES::-2}
+echo "%dist .sles${SLES_MAJOR}" > /etc/rpm/macros.custom
 fi
 
 if ((RHEL > 0 && RHEL <= 7)); then
