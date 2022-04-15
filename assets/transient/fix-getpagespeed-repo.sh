@@ -7,8 +7,28 @@ RHEL=$(rpm -E 0%{?rhel})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
 
+SLES=$(rpm -E 0%{?suse_version})
+# removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
+SLES=${SLES##+(0)}
+
 if [[ $(rpm -E %{amzn}) == 2 ]]; then
   sed -i "s@redhat/7@amzn/2@g" /etc/yum.repos.d/getpagespeed-extras.repo
+fi
+
+if ((SLES > 0)); then
+cat << 'EOF' > /etc/yum/repos.d/repo-getpagespeed-extras.repo
+[repo-getpagespeed-extras-noarch]
+name=GetPageSpeed Extras Repository noarch
+enabled=1
+autorefresh=1
+baseurl=https://extras.getpagespeed.com/sles/$releasever/noarch/
+
+[repo-getpagespeed-extras]
+name=GetPageSpeed Extras Repository
+enabled=1
+autorefresh=1
+baseurl=https://extras.getpagespeed.com/sles/$releasever/x86_64/
+EOF
 fi
 
 if ((RHEL > 0 && RHEL <= 7)); then
