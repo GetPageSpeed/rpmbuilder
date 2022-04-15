@@ -29,7 +29,7 @@ enabled=1
 autorefresh=1
 baseurl=https://extras.getpagespeed.com/sles/$releasever/x86_64/
 EOF
-zypper install --non-interactive axel
+zypper -n install axel
 axel https://extras.getpagespeed.com/RPM-GPG-KEY-GETPAGESPEED
 rpm --import RPM-GPG-KEY-GETPAGESPEED
 fi
