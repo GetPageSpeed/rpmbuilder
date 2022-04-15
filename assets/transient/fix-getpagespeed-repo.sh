@@ -29,6 +29,7 @@ enabled=1
 autorefresh=1
 baseurl=https://extras.getpagespeed.com/sles/$releasever/x86_64/
 EOF
+rpm --import https://extras.getpagespeed.com/RPM-GPG-KEY-GETPAGESPEED
 fi
 
 if ((RHEL > 0 && RHEL <= 7)); then
