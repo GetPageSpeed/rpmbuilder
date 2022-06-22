@@ -18,7 +18,7 @@ PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
 case "${DISTRO}" in
     amazonlinux|centos|cloudrouter*centos)
         # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
-        PRE_PRE_PACKAGES="https://epel.cloud/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+        PRE_PRE_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
         PRE_PACKAGES="epel-release"
         # bypassing weird bug?
         # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
