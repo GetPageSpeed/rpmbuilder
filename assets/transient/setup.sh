@@ -52,7 +52,8 @@ case "${DISTRO}" in
         # Just a dummy pre-install to simplify RUN step below
         PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
-        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive"
+        # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en"
         ;;
     opensuse)
         PKGR="dnf"
