@@ -43,10 +43,7 @@ function generate() {
     # This makes %_selinux_policy_version usage cause issues with -selinux packages
     # Rocky Linux is closer to upstream in these regards and no issues, so we use it.
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then
-        FROM_DISTRO="quay.io/centos/centos"
-        FROM_RELEASE_TAG="stream9"
-    fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
     cat > ${DOCKERFILE} << EOF
 FROM ${FROM_DISTRO}:${FROM_RELEASE_TAG}
