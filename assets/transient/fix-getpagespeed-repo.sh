@@ -50,8 +50,9 @@ if ((RHEL > 0 && RHEL <= 7)); then
 fi
 
 if ((RHEL > 0 && RHEL >= 9)); then
+  dnf -y install crypto-policies-scripts
   echo 'Fixing crypto policy to match with our key'
-  update-crypto-policies --set DEFAULT:SHA1 >/dev/null 2>&1 ||:
+  update-crypto-policies --set DEFAULT:SHA1 ||:
 fi
 
 # for any DNF client, copy in custom user-agent plugin for DNF
