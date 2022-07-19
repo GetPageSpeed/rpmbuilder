@@ -49,6 +49,11 @@ if ((RHEL > 0 && RHEL <= 7)); then
   yum versionlock yum yum-utils
 fi
 
+if ((RHEL > 0 && RHEL >= 9)); then
+  echo 'Fixing crypto policy to match with our key'
+  update-crypto-policies --set DEFAULT:SHA1 >/dev/null 2>&1 ||:
+fi
+
 # for any DNF client, copy in custom user-agent plugin for DNF
 # and overwrite our plugin in the process
 DNF_PLUGINS_DIR="/usr/lib/python*/site-packages/dnf-plugins"
