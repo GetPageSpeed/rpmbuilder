@@ -17,6 +17,8 @@ jobs:
             version: 35
           - os: fedora
             version: 36
+          - os: fedora
+            version: 37
           - os: amazonlinux
             version: 2
           - os: opensuse
