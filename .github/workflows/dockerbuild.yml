@@ -7,9 +7,9 @@ jobs:
   one:
     runs-on: ubuntu-latest
     strategy:
+      # allow pushing successfully built images anyway
+      fail-fast: false
       matrix:
-        # allow pushing successfully built images anyway
-        fail-fast: false
         os: [centos]
         version: [6, 7, 8, 9]
         include:
