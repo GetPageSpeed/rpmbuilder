@@ -27,37 +27,37 @@ case "${DISTRO}" in
           PKGR="dnf";
           CONFIG_MANAGER="dnf config-manager"
           PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
-          break
-        fi
-        # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
-        PRE_PRE_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
-        PRE_PACKAGES="epel-release"
-        # bypassing weird bug?
-        # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
-        if [[ ${RELEASE_EPEL} -le 7 ]]; then
-          # yum-plugin-versionlock required to freeze our patched version of yum-builddep script
-          # we also freeze "yum" for keeping User-Agent hack
-          PACKAGES="${PACKAGES} yum-plugin-versionlock"
-          if [[ "$DISTRO" == "amazonlinux" ]]; then
-            PRE_PACKAGES="${PRE_PACKAGES} centos-release-scl"
-          else
-            PRE_PRE_PACKAGES="${PRE_PRE_PACKAGES} centos-release-scl"
+        else
+          # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
+          PRE_PRE_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+          PRE_PACKAGES="epel-release"
+          # bypassing weird bug?
+          # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
+          if [[ ${RELEASE_EPEL} -le 7 ]]; then
+            # yum-plugin-versionlock required to freeze our patched version of yum-builddep script
+            # we also freeze "yum" for keeping User-Agent hack
+            PACKAGES="${PACKAGES} yum-plugin-versionlock"
+            if [[ "$DISTRO" == "amazonlinux" ]]; then
+              PRE_PACKAGES="${PRE_PACKAGES} centos-release-scl"
+            else
+              PRE_PRE_PACKAGES="${PRE_PRE_PACKAGES} centos-release-scl"
+            fi
           fi
+          # CircleCI in EL6 sometimes fails (support claims it's due to lack of "official" git)
+          # We threw latest git to our EL6 repo (clean Fedora rebuilt)
+          PACKAGES="${PACKAGES} @buildsys-build git devtoolset-8-gcc-c++ devtoolset-8-binutils"
+          if [[ ${RELEASE_EPEL} -ge 8 ]]; then
+            PKGR="dnf";
+            CONFIG_MANAGER="dnf config-manager"
+            PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
+          fi
+          if [[ ${RELEASE_EPEL} -eq 8 ]]; then
+            PACKAGES="${PACKAGES} python27"
+          fi
+          # no Python 2 in EL 8?
+          # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
+          # devtoolset-8 is for faster CI builds of packages that want to use it
         fi
-        # CircleCI in EL6 sometimes fails (support claims it's due to lack of "official" git)
-        # We threw latest git to our EL6 repo (clean Fedora rebuilt)
-        PACKAGES="${PACKAGES} @buildsys-build git devtoolset-8-gcc-c++ devtoolset-8-binutils"
-        if [[ ${RELEASE_EPEL} -ge 8 ]]; then
-          PKGR="dnf";
-          CONFIG_MANAGER="dnf config-manager"
-          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
-        fi
-        if [[ ${RELEASE_EPEL} -eq 8 ]]; then
-          PACKAGES="${PACKAGES} python27"
-        fi
-        # no Python 2 in EL 8?
-        # @buildsys-build is to better "emulate" mock by preinstalling gcc thus preventing devtoolset-* lookup for "BuildRequires: gcc"
-        # devtoolset-8 is for faster CI builds of packages that want to use it
         ;;
     fedora|mageia)
         PKGR="dnf";
