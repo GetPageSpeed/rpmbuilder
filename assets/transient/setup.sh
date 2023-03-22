@@ -11,7 +11,7 @@ RHEL=$(rpm -E 0%{?rhel})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
 
-AMZN=$(rpm -E 0%{?amzn}
+AMZN=$(rpm -E 0%{?amzn})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 AMZN=${RHEL##+(0)}
 
