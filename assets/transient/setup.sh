@@ -13,7 +13,7 @@ RHEL=${RHEL##+(0)}
 
 AMZN=$(rpm -E 0%{?amzn})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
-AMZN=${RHEL##+(0)}
+AMZN=${AMZN##+(0)}
 
 PKGR="yum"
 CONFIG_MANAGER="yum-config-manager"
