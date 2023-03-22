@@ -20,6 +20,9 @@ function generate() {
         2)
            RELEASE_EPEL=7
            ;;
+        2023)
+           RELEASE_EPEL=
+           ;;
         *)
            RELEASE_EPEL=7
            ;;

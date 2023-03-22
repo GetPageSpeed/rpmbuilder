@@ -11,12 +11,24 @@ RHEL=$(rpm -E 0%{?rhel})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
 
+AMZN=$(rpm -E 0%{?amzn}
+# removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
+AMZN=${RHEL##+(0)}
+
 PKGR="yum"
 CONFIG_MANAGER="yum-config-manager"
 # yum-utils is provided by "dnf-utils" in recent OS versions, but it always brings up yum-config-manager
 PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
 case "${DISTRO}" in
     amazonlinux|centos|cloudrouter*centos)
+        # Amazon Linux 2023 does not support EPEL or EPEL-like repositories
+        if [[ "$DISTRO" == "amazonlinux" ]] && [[ "$AMZN" -ge 2023 ]]; then
+          echo "Amazon Linux 2023 does not support EPEL or EPEL-like repositories"
+          PKGR="dnf";
+          CONFIG_MANAGER="dnf config-manager"
+          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
+          break
+        fi
         # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
         PRE_PRE_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
         PRE_PACKAGES="epel-release"
