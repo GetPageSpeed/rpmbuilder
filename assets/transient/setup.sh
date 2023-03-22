@@ -28,6 +28,7 @@ case "${DISTRO}" in
           PKGR="dnf";
           CONFIG_MANAGER="dnf config-manager"
           PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm";
+          PRE_PACKAGES="dnf-plugins-core"
           PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
         else
           # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
