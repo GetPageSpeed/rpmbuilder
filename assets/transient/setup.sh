@@ -115,7 +115,7 @@ if [[ $PKGR == "dnf" ]]; then
   $PKGR -y install dnf-plugins-core
 fi
 
-# Check if /usr/bin/dnf5 exists
+# Check if /usr/bin/dnf5 exists!
 if [[ -f /usr/bin/dnf5 ]]; then
   /usr/bin/dnf5 -y install dnf5-plugins
 fi
