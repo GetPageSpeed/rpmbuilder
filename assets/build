@@ -29,7 +29,7 @@ fi
 # each repo can go with rpmmacros (useful for building multiple branches while retaining same spec)
 [ -f ${SOURCES}/rpmmacros ] \
   && cat ${SOURCES}/rpmmacros >> /root/.rpmmacros \
-  && chown root:root /root/.rpmmacros 
+  && chown root:root /root/.rpmmacros
 
 # Use rpm instead of rpmbuild to avoid bad exit in EL6
 RPM_BUILD_SOURCES=$(rpm --eval '%{_sourcedir}')
@@ -45,9 +45,9 @@ find ${SOURCES} -mindepth 1 -maxdepth 1 -name "*.spec" \
 # copy any non-spec files/dirs to rpmbuild/SOURCES directory
 find ${SOURCES} -mindepth 1 -maxdepth 1 ! -name "*.spec" \
     -exec cp -R {} ${RPM_BUILD_SOURCES}/. \;
-    
+
 # fix permissions on working copy
-chown root:root /root/rpmbuild    
+chown root:root /root/rpmbuild
 
 # VMOD tests during build:
 # varnishd is dropping to user nobody/varnish, and as such doesn't have access in /root/
@@ -57,6 +57,7 @@ chmod 0755 /root
 # In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
 BUILDDEP_CMD="yum-builddep"
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
+command -v dnf5 > /dev/null 2>&1 && BUILDDEP_CMD="dnf5 builddep"
 RPMBUILD_SETARCH=""
 if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
   # getting builddep to fetch i686 RPMs from x86_64 repo is no easy task :D
@@ -76,7 +77,7 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
     ${PKGR} clean all
     ${BUILDDEP_CMD} -y $specFile
   fi
-  
+
   # repeat step for chosen arch
   if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
     if ! ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile; then
@@ -84,7 +85,7 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
       ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile
     fi
   fi
-  
+
   spectool --sourcedir --get-files $specFile
 
   # build SRPM, also allows to fail quicker
