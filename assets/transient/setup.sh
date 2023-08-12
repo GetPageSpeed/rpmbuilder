@@ -111,13 +111,9 @@ if [[ $RHEL == 8 ]]; then
 fi
 
 if [[ $PKGR == "dnf" ]]; then
+  $PKGR -y remove libdnf5 ||:
   # dnf-command(builddep)' and 'dnf-command(config-manager)'
   $PKGR -y install dnf-plugins-core
-fi
-
-# Check if /usr/bin/dnf5 exists!
-if [[ -f /usr/bin/dnf5 ]]; then
-  dnf -y remove libdnf5
 fi
 
 ${PKGR} -y install ${PRE_PRE_PACKAGES}
