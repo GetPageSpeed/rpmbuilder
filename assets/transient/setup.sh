@@ -15,6 +15,10 @@ AMZN=$(rpm -E 0%{?amzn})
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 AMZN=${AMZN##+(0)}
 
+FEDORA=$(rpm -E 0%{?fedora})
+# removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
+FEDORA=${FEDORA##+(0)}
+
 PKGR="yum"
 CONFIG_MANAGER="yum-config-manager"
 # yum-utils is provided by "dnf-utils" in recent OS versions, but it always brings up yum-config-manager
@@ -63,12 +67,21 @@ case "${DISTRO}" in
         fi
         ;;
     fedora|mageia)
-        PKGR="dnf";
-        # Just a dummy pre-install to simplify RUN step below
-        PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
-        PRE_PACKAGES="dnf-plugins-core"
-        # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
-        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en"
+        if [[ "FEDORA" -ge 39 ]]; then
+          PKGR="dnf5";
+          # Just a dummy pre-install to simplify RUN step below
+          PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
+          PRE_PACKAGES="dnf5-plugins"
+          # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
+          PACKAGES="dnf5-plugins gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en"
+        else
+          PKGR="dnf";
+          # Just a dummy pre-install to simplify RUN step below
+          PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
+          PRE_PACKAGES="dnf-plugins-core"
+          # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
+          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en"
+        fi
         ;;
     opensuse)
         PKGR="dnf"
@@ -111,7 +124,6 @@ if [[ $RHEL == 8 ]]; then
 fi
 
 if [[ $PKGR == "dnf" ]]; then
-  $PKGR -y remove libdnf5 ||:
   # dnf-command(builddep)' and 'dnf-command(config-manager)'
   $PKGR -y install dnf-plugins-core
 fi
