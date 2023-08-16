@@ -57,12 +57,7 @@ chmod 0755 /root
 # In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
 BUILDDEP_CMD="yum-builddep"
 command -v dnf > /dev/null 2>&1 && BUILDDEP_CMD="dnf builddep"
-
-if command -v dnf5 > /dev/null 2>&1; then
-  BUILDDEP_CMD="dnf5 builddep"
-  ln -s $(which dnf5) /usr/bin/yum
-fi
-
+command -v dnf5 > /dev/null 2>&1 && BUILDDEP_CMD="dnf5 builddep"
 RPMBUILD_SETARCH=""
 if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
   # getting builddep to fetch i686 RPMs from x86_64 repo is no easy task :D
