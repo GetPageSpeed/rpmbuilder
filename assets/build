@@ -8,6 +8,11 @@ OUTPUT=${OUTPUT-${SOURCES}}
 
 PKGR=yum
 
+if [[ $PKGR == "dnf5" ]]; then
+  # Ensure yum symlink
+  ln -fs $(which dnf5) /usr/bin/yum
+fi
+
 # https://docs.oracle.com/cd/E93554_01/E69348/html/uek4-czc_xmc_xt.html
 touch /var/lib/rpm/*
 
