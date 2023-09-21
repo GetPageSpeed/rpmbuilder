@@ -130,7 +130,7 @@ fi
 
 if [[ $PKGR == "dnf5" ]]; then
   # Ensure yum symlink
-  ln -s $(which dnf5) /usr/bin/yum
+  ln -s $(command -v dnf5) /usr/bin/yum
 fi
 
 ${PKGR} -y install ${PRE_PRE_PACKAGES}
