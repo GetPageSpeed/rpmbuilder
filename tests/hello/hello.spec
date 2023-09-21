@@ -28,7 +28,7 @@ install -D -m 755 hello %{buildroot}%{_bindir}/%{name}
 
 %check
 ./hello > output.txt
-echo "Hello, World!!" > expected_output.txt
+echo "Hello, World!" > expected_output.txt
 diff output.txt expected_output.txt
 
 
