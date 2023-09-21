@@ -41,6 +41,14 @@ jobs:
         run: ./crypt-keeper.sh generate ${{ matrix.os }} ${{ matrix.version }}
       - name: Build Docker image
         run: ./crypt-keeper.sh build ${{ matrix.os }} ${{ matrix.version }}
+
+      - name: Test RPM Build
+        run: |
+          ls -al
+          docker run --rm -v $PWD/sample.spec:/sample.spec:ro YOUR_DOCKER_IMAGE_NAME rpmbuild -ba /sample.spec
+          # Replace YOUR_DOCKER_IMAGE_NAME with the name/tag of your Docker image
+          # Assumes sample.spec is in the repository root        
+
       - name: Log in to Docker Hub
         run: docker login -u="${{ secrets.DOCKER_USER }}" -p="${{ secrets.DOCKER_PASS }}"
       - name: Push to Docker Hub
