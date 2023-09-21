@@ -107,7 +107,7 @@ function test() {
     # Test build
     DISTRO=${1}
     VERSION=${2}
-    docker run --rm -v $PWD/sample.spec:/sample.spec:ro $(docker-image-name ${DISTRO} ${VERSION}) build
+    docker run --rm -v $(pwd)/tests/hello:/sources $(docker-image-name ${DISTRO} ${VERSION}) build
 }
 
 case "$1" in
