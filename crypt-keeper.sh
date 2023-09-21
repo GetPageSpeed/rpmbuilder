@@ -102,8 +102,16 @@ function push() {
     docker push --all-tags "${DOCKER_REGISTRY_USER}/rpmbuilder" # $(docker-image-name ${DISTRO} ${VERSION})
 }
 
+
+function test() {
+    # Test build
+    DISTRO=${1}
+    VERSION=${2}
+    docker run --rm -v $PWD/sample.spec:/sample.spec:ro $(docker-image-name ${DISTRO} ${VERSION}) build
+}
+
 case "$1" in
-    generate|build|push)
+    generate|build|push|test)
         if [ "$2" == "all" ]; then
             map-all $1
         else
