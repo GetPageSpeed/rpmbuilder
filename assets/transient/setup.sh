@@ -67,21 +67,12 @@ case "${DISTRO}" in
         fi
         ;;
     fedora|mageia)
-        if [[ "FEDORA" -ge 39 ]]; then
-          PKGR="dnf5";
-          # Just a dummy pre-install to simplify RUN step below
-          PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
-          PRE_PACKAGES="dnf5-plugins"
-          # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
-          PACKAGES="dnf5-plugins gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en"
-        else
-          PKGR="dnf";
-          # Just a dummy pre-install to simplify RUN step below
-          PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
-          PRE_PACKAGES="dnf-plugins-core"
-          # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
-          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en"
-        fi
+        PKGR="dnf";
+        # Just a dummy pre-install to simplify RUN step below
+        PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
+        PRE_PACKAGES="dnf-plugins-core"
+        # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en"
         ;;
     opensuse)
         PKGR="dnf"
@@ -126,11 +117,6 @@ fi
 if [[ $PKGR == "dnf" ]]; then
   # dnf-command(builddep)' and 'dnf-command(config-manager)'
   $PKGR -y install dnf-plugins-core
-fi
-
-if [[ $PKGR == "dnf5" ]]; then
-  # Ensure yum symlink
-  ln -s $(command -v dnf5) /usr/bin/yum
 fi
 
 ${PKGR} -y install ${PRE_PRE_PACKAGES}
