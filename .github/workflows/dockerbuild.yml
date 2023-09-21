@@ -44,7 +44,7 @@ jobs:
 
       - name: Test RPM Build
         run: |
-          ls -al centos
+          ls -al centos/7
           docker run --rm -v $PWD/sample.spec:/sample.spec:ro YOUR_DOCKER_IMAGE_NAME rpmbuild -ba /sample.spec
           # Replace YOUR_DOCKER_IMAGE_NAME with the name/tag of your Docker image
           # Assumes sample.spec is in the repository root        
