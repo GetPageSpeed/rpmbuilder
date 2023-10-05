@@ -36,7 +36,7 @@ case "${DISTRO}" in
           PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
         else
           # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
-          PRE_PRE_PACKAGES="https://epel.cloud/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+          PRE_PRE_PACKAGES="http://mirror.yandex.ru/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
           PRE_PACKAGES="epel-release"
           # bypassing weird bug?
           # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
