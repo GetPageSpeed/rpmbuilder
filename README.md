@@ -1,12 +1,12 @@
-# RPM build containers for RedHat based various distros
+# RPM build containers for RedHat-based various distros
 
 [![CI](https://github.com/GetPageSpeed/rpmbuilder/actions/workflows/dockerbuild.yml/badge.svg)](https://github.com/GetPageSpeed/rpmbuilder/actions/workflows/dockerbuild.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/getpagespeed/rpmbuilder.svg)](https://hub.docker.com/r/getpagespeed/rpmbuilder/)
 
 This is different from upstream because:
 
-* it allows for faster failed builds: a failed build can be detected early through building SRPM first, as well as optional `rpmlint` checks. In the upstream docker image, a failed build will have an exit status code of 0, so CI tools will not be able to detect failed builds to begin with.
+* it allows for faster-failed builds: a failed build can be detected early through building SRPM first, as well as optional `rpmlint` checks. In the upstream docker image, a failed build will have an exit status code of 0, so CI tools will not be able to detect failed builds to begin with.
 * a patch is applied to `yum-builddep` to prevent unnecessary enablement of `-source` repos, to facilitate faster builds.
-, the patch for yum-builddep to NOT enable source repos if .spec file is used (fixes a bug)
+, the patch for `yum-builddep` to NOT enable source repos if .spec file is used (fixes a bug)
 
 ### Available versions
 
@@ -16,14 +16,14 @@ Available versions can be located by visiting [Docker Hub Repository](https://hu
 
 ```bash
 BUILDER_VERSION=centos-7
-docker pull GetPageSpeed/rpmbuilder:${BUILDER_VERSION}
+docker pull getpagespeed/rpmbuilder:${BUILDER_VERSION}
 ```
 
 ### Run
-In this example `SOURCE_DIR` contains spec file and sources for the the RPM we are building.
+In this example `SOURCE_DIR` contains the `.spec` file and sources for the the RPM we are building.
 
 ```bash
-# set env variables for conviniece
+# set env variables for convenience
 SOURCE_DIR=$(pwd)/sources
 OUTPUT_DIR=$(pwd)/output
 
@@ -34,10 +34,7 @@ mkdir -p ${OUTPUT_DIR}
 chcon -Rt svirt_sandbox_file_t ${OUTPUT_DIR} ${SOURCE_DIR}
 
 # build rpm
-docker run \
-    -v ${SOURCE_DIR}:/sources \
-    -v ${OUTPUT_DIR}:/output \
-    GetPageSpeed/rpmbuilder:${BUILDER_VERSION}
+docker run -v ${SOURCE_DIR}:/sources -v ${OUTPUT_DIR}:/output getpagespeed/rpmbuilder:${BUILDER_VERSION}
 ```
 
 The output files will be available in `OUTPUT_DIR`.
