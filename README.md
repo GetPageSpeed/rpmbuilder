@@ -14,10 +14,15 @@ Available versions can be located by visiting [Docker Hub Repository](https://hu
 
 ### Fetch image
 
+For example, to use RHEL 7 based image:
+
 ```bash
-BUILDER_VERSION=centos-7
+BUILDER_VERSION=el7
 docker pull getpagespeed/rpmbuilder:${BUILDER_VERSION}
 ```
+
+Most images are tagged with the `dist` RPM tag, so you can use `el7`, `el8`, 
+`fc38` etc.
 
 ### Run
 In this example `SOURCE_DIR` contains the `.spec` file and sources for the the RPM we are building.
