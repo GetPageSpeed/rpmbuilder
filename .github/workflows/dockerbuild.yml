@@ -25,6 +25,8 @@ jobs:
             version: 38
           - os: fedora
             version: 39
+          - os: fedora
+            version: 40
           - os: amazonlinux
             version: 2
           - os: amazonlinux
