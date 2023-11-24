@@ -11,16 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [centos]
-        version: [6, 7, 8, 9]
+        version: [7, 8, 9]
         include:
-          - os: fedora
-            version: 34
-          - os: fedora
-            version: 35
-          - os: fedora
-            version: 36
-          - os: fedora
-            version: 37
           - os: fedora
             version: 38
           - os: fedora
