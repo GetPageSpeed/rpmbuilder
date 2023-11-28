@@ -56,7 +56,7 @@ If you are creating a spec file, it is often useful to have a clean room debuggi
 docker run --rm -it --entrypoint bash \
     -v ${SOURCE_DIR}:/sources \
     -v ${OUTPUT_DIR}:/output \
-    GetPageSpeed/rpmbuilder:${BUILDER_VERSION}
+    getpagespeed/rpmbuilder:${BUILDER_VERSION}
 ```
 This command will drop you into a bash shell within the container. From here, you can execute `build` to build the spec file. You can also iteratively modify the specfile and re-run `build`.
 
