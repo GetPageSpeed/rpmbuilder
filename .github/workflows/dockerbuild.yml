@@ -14,11 +14,11 @@ jobs:
         version: [7, 8, 9]
         include:
           - os: fedora
-            version: 38
-          - os: fedora
             version: 39
           - os: fedora
             version: 40
+          - os: fedora
+            version: 41
           - os: amazonlinux
             version: 2
           - os: amazonlinux
