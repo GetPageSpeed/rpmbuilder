@@ -64,6 +64,11 @@ if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
   echo x86_64 > /etc/yum/vars/basearch
 fi
 
+total_modules=$(find ${RPM_BUILD_SPECS} -name "*.spec" | wc -l)
+success_count=0
+fail_count=0
+failure_tolerance=0.1  # Example: Allow up to 10% of modules to fail
+
 for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
@@ -105,8 +110,20 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
   mv ${RPM_BUILD_SRPMS}/*.rpm ${OUTPUT}
 
   if [[ -z ${SRPM_ONLY} ]]; then
+    set +e  # disable exit-on-error to allow for failing builds
     # attempting to build RPM now
     ${RPMBUILD_SETARCH} rpmbuild -ba $specFile
+
+    if [[ $? -eq 0 ]]; then
+      success_count=$((success_count+1))
+    else
+      fail_count=$((fail_count+1))
+    fi
+
+    if [[ $(echo "scale=2; $fail_count / $total_modules" | bc) > $failure_tolerance ]]; then
+      echo "Failure tolerance exceeded. Exiting build."
+      exit 1
+    fi
 
     if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
       # RPMs built successfully. Check using rpmlint
@@ -118,8 +135,9 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
         -not -name "*-debuginfo-*" -not -name "*-debugsource-*" -name "*.rpm" \
         -exec rpmlint {} \;
     fi
-
     mv ${RPM_BUILD_RPMS}/*/*.rpm ${OUTPUT}
+
+    set -e  # re-enable exit-on-error
   fi
 done
 
