@@ -33,7 +33,7 @@ case "${DISTRO}" in
           CONFIG_MANAGER="dnf config-manager"
           PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm";
           PRE_PACKAGES="dnf-plugins-core"
-          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
+          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive bc"
         else
           # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
           PRE_PRE_PACKAGES="http://mirror.yandex.ru/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
@@ -56,7 +56,7 @@ case "${DISTRO}" in
           if [[ ${RELEASE_EPEL} -ge 8 ]]; then
             PKGR="dnf";
             CONFIG_MANAGER="dnf config-manager"
-            PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive"
+            PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config redhat-release which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive bc"
           fi
           if [[ ${RELEASE_EPEL} -eq 8 ]]; then
             PACKAGES="${PACKAGES} python27"
@@ -72,7 +72,7 @@ case "${DISTRO}" in
         PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
         # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
-        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en"
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en bc"
         ;;
     opensuse)
         PKGR="dnf"
@@ -80,7 +80,7 @@ case "${DISTRO}" in
         # Just a dummy pre-install to simplify RUN step below
         PRE_PRE_PACKAGES="dnf"
         PRE_PACKAGES="dnf-plugins-core"
-        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua spectool"
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua spectool bc"
         ;;
 esac
 

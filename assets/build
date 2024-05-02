@@ -3,6 +3,9 @@
 # use exit codes of failing commands
 set -exo pipefail
 
+# `bc` is needed for floating point arithmetic, fail if not present
+command -v bc > /dev/null 2>&1 || { echo "bc is required but not installed. Aborting." >&2; exit 1; }
+
 SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 
