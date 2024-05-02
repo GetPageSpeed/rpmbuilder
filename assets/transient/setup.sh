@@ -43,7 +43,7 @@ case "${DISTRO}" in
           if [[ ${RELEASE_EPEL} -le 7 ]]; then
             # yum-plugin-versionlock required to freeze our patched version of yum-builddep script
             # we also freeze "yum" for keeping User-Agent hack
-            PACKAGES="${PACKAGES} yum-plugin-versionlock"
+            PACKAGES="${PACKAGES} yum-plugin-versionlock bc"
             if [[ "$DISTRO" == "amazonlinux" ]]; then
               PRE_PACKAGES="${PRE_PACKAGES} centos-release-scl"
             else
