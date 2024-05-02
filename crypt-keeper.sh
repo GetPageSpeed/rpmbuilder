@@ -32,7 +32,7 @@ function generate() {
     ROOT=$(pwd)/${DISTRO}/${RELEASE}/
     ASSETS=${ROOT}/assets
     DOCKERFILE=${ROOT}/Dockerfile
-    rm -rf ${ROOT} && mkdir -p ${ROOT}
+    rm -rf "${ROOT}" && mkdir -p "${ROOT}"
 
     # prepare files
     cp -R ./assets ${ROOT}/.
