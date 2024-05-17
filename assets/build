@@ -11,6 +11,15 @@ OUTPUT=${OUTPUT-${SOURCES}}
 
 PKGR=yum
 
+# If doesn't already exist, create a symlink from /usr/bin/yum to /usr/bin/dnf
+# If dnf exists
+if [[ -f /usr/bin/dnf ]]; then
+  PKGR=dnf
+  if [[ ! -f /usr/bin/yum ]]; then
+    ln -s /usr/bin/dnf /usr/bin/yum
+  fi
+fi
+
 # https://docs.oracle.com/cd/E93554_01/E69348/html/uek4-czc_xmc_xt.html
 touch /var/lib/rpm/*
 
