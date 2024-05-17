@@ -9,12 +9,9 @@ command -v bc > /dev/null 2>&1 || { echo "bc is required but not installed. Abor
 SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 
-PKGR=yum
-
-# If doesn't already exist, create a symlink from /usr/bin/yum to /usr/bin/dnf
-# If dnf exists
+# The following is to support legacy prepare.sh scripts which call "yum" on "dnf" systems
+# Creates a symlink to dnf if yum is not present
 if [[ -f /usr/bin/dnf ]]; then
-  PKGR=dnf
   if [[ ! -f /usr/bin/yum ]]; then
     ln -s /usr/bin/dnf /usr/bin/yum
   fi
@@ -90,14 +87,14 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
 
   # install build requires
   if ! ${BUILDDEP_CMD} -y $specFile; then
-    ${PKGR} clean all
+    pkgr clean all
     ${BUILDDEP_CMD} -y $specFile
   fi
 
   # repeat step for chosen arch
   if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
     if ! ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile; then
-      ${PKGR} clean all
+      pkgr clean all
       ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile
     fi
   fi

@@ -156,5 +156,6 @@ fi
 # we will create images on schedule to facilitate faster builds that do not need fetching meta on every build
 ${PKGR} --disablerepo "getpagespeed*" makecache
 
-# fix up /usr/bin/build with the right packager
-sed -i -r "s@^PKGR=yum@PKGR=${PKGR}@" /usr/bin/build
+# Symlink packager command to /usr/bin/pkgr (yum or dnf)
+# The build script uses /usr/bin/pkgr to install build dependencies
+ln -sf /usr/bin/${PKGR} /usr/bin/pkgr
