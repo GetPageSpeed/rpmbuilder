@@ -23,7 +23,9 @@ gcc -o hello hello.c
 
 
 %install
-install -D -m 755 hello %{buildroot}%{_bindir}/%{name}
+# Appears that %%{buildroot} is somehow misaligned as of Fedora 41,
+# so using $RPM_BUILD_ROOT instead.
+install -D -m 755 hello "$RPM_BUILD_ROOT%{_bindir}/%{name}"
 
 
 %check
