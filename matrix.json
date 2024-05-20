@@ -29,11 +29,12 @@
             "dist": "fc",
             "dir": "fedora",
             "description": "Fedora Linux",
-            "include_rolling_release": false,
+            "include_rolling_release": true,
             "rpmbuilder_name": "fedora",
             "versions": [
                 40,
-                39
+                39,
+                41
             ]
         },
         "amazonlinux": {
