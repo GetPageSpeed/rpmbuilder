@@ -21,10 +21,6 @@
             "version": 39
         },
         {
-            "os": "fedora",
-            "version": 41
-        },
-        {
             "os": "amazonlinux",
             "version": 2
         },
