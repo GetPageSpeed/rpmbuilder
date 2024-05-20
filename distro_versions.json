@@ -1,0 +1,36 @@
+{
+    "include": [
+        {
+            "os": "centos",
+            "version": 7
+        },
+        {
+            "os": "centos",
+            "version": 8
+        },
+        {
+            "os": "centos",
+            "version": 9
+        },
+        {
+            "os": "fedora",
+            "version": 40
+        },
+        {
+            "os": "fedora",
+            "version": 39
+        },
+        {
+            "os": "amazonlinux",
+            "version": 2
+        },
+        {
+            "os": "amazonlinux",
+            "version": 2023
+        },
+        {
+            "os": "opensuse",
+            "version": 15
+        }
+    ]
+}

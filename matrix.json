@@ -1,0 +1,96 @@
+{
+    "distro_defaults": {
+        "os_versions": 2,
+        "packager": "dnf"
+    },
+    "distros": {
+        "rhel": {
+            "dist": "el",
+            "dir": "redhat",
+            "rpmbuilder_name": "centos",
+            "description": "CentOS/RHEL",
+            "has_plesk": true,
+            "docker": "rockylinux",
+            "packager": "dnf",
+            "versions_check": false,
+            "versions": [
+                7,
+                8,
+                9
+            ],
+            "version_overrides": {
+                "7": {
+                    "docker": "centos",
+                    "packager": "yum"
+                }
+            }
+        },
+        "fedora": {
+            "dist": "fc",
+            "dir": "fedora",
+            "description": "Fedora Linux",
+            "include_rolling_release": false,
+            "rpmbuilder_name": "fedora",
+            "versions": [
+                40,
+                39
+            ]
+        },
+        "amazonlinux": {
+            "dist": "amzn",
+            "description": "Amazon Linux",
+            "versions_check": false,
+            "versions": [
+                2,
+                2023
+            ],
+            "version_overrides": {
+                "2": {
+                    "packager": "yum"
+                }
+            },
+            "rpmbuilder_name": "amazonlinux",
+            "dir": "amzn"
+        },
+        "sles": {
+            "dist": "sles",
+            "description": "SUSE Linux Enterprise",
+            "os_versions": 1,
+            "docker": "opensuse/leap",
+            "rpmbuilder_name": "opensuse",
+            "dir": "sles",
+            "versions": [
+                15
+            ]
+        }
+    },
+    "collections": {
+        "nginx": {
+            "branches": {
+                "stable": {
+                    "description": "Stable",
+                    "git_branch": "master"
+                },
+                "mainline": {
+                    "description": "Mainline"
+                },
+                "angie": {
+                    "description": "Angie"
+                },
+                "nginx-mod": {
+                    "description": "NGINX-MOD"
+                },
+                "tengine": {
+                    "description": "Tengine"
+                }
+            }
+        },
+        "varnish": {
+            "branches": {
+                "varnish60": {
+                    "description": "Varnish 6.0 LTS"
+                }
+            }
+        }
+    }
+}
