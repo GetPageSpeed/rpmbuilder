@@ -78,7 +78,7 @@ case "${DISTRO}" in
         PKGR="dnf"
         # "zypper --non-interactive"
         # Just a dummy pre-install to simplify RUN step below
-        PRE_PRE_PACKAGES="dnf"
+        PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
         PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua spectool bc"
         ;;

@@ -16,22 +16,6 @@ if [[ $(rpm -E %{amzn}) == 2 ]]; then
 fi
 
 if ((SLES > 0)); then
-cat << 'EOF' > /etc/zypp/repos.d/repo-getpagespeed-extras.repo
-[repo-getpagespeed-extras-noarch]
-name=GetPageSpeed Extras Repository noarch
-enabled=1
-autorefresh=1
-baseurl=https://extras.getpagespeed.com/sles/$releasever/noarch/
-
-[repo-getpagespeed-extras]
-name=GetPageSpeed Extras Repository
-enabled=1
-autorefresh=1
-baseurl=https://extras.getpagespeed.com/sles/$releasever/x86_64/
-EOF
-zypper -n install axel
-axel https://extras.getpagespeed.com/RPM-GPG-KEY-GETPAGESPEED
-rpm --import RPM-GPG-KEY-GETPAGESPEED
 # 1500 => 15
 SLES_MAJOR=${SLES::-2}
 echo "%dist .sles${SLES_MAJOR}" > /etc/rpm/macros.custom
@@ -47,12 +31,6 @@ if ((RHEL > 0 && RHEL <= 7)); then
   # because we patched yum, versionlock ше:
   yum -y install yum-plugin-versionlock
   yum versionlock yum yum-utils
-fi
-
-if ((RHEL > 0 && RHEL >= 9)); then
-  dnf -y install crypto-policies-scripts
-  echo 'Fixing crypto policy to match with our key'
-  update-crypto-policies --set DEFAULT:SHA1 ||:
 fi
 
 # for any DNF client, copy in custom user-agent plugin for DNF
