@@ -116,7 +116,8 @@ if [[ $PKGR == "dnf" ]]; then
   $PKGR -y install dnf-plugins-core
 fi
 
-${PKGR} -y install ${PRIMARY_REPO_PACKAGES}
+# May be installed already
+${PKGR} -y install ${PRIMARY_REPO_PACKAGES} || true
 # if SECONDARY_REPO_PACKAGES is set, install them
 if test -n "${SECONDARY_REPO_PACKAGES-}"; then
   ${PKGR} -y install ${SECONDARY_REPO_PACKAGES}
