@@ -31,12 +31,13 @@ case "${DISTRO}" in
           echo "Amazon Linux 2023 does not support EPEL or EPEL-like repositories"
           PKGR="dnf";
           CONFIG_MANAGER="dnf config-manager"
-          PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm";
+          PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm";
           PRE_PACKAGES="dnf-plugins-core"
           PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive bc"
         else
           # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
-          PRE_PRE_PACKAGES="http://mirror.yandex.ru/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+          PRIMARY_REPO_PACKAGES="http://mirror.yandex.ru/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+          SECONDARY_REPO_PACKAGES="epel-release centos-release-scl";
           PRE_PACKAGES="epel-release"
           # bypassing weird bug?
           # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
@@ -44,11 +45,6 @@ case "${DISTRO}" in
             # yum-plugin-versionlock required to freeze our patched version of yum-builddep script
             # we also freeze "yum" for keeping User-Agent hack
             PACKAGES="${PACKAGES} yum-plugin-versionlock bc"
-            if [[ "$DISTRO" == "amazonlinux" ]]; then
-              PRE_PACKAGES="${PRE_PACKAGES} centos-release-scl"
-            else
-              PRE_PRE_PACKAGES="${PRE_PRE_PACKAGES} centos-release-scl"
-            fi
           fi
           # CircleCI in EL6 sometimes fails (support claims it's due to lack of "official" git)
           # We threw latest git to our EL6 repo (clean Fedora rebuilt)
@@ -69,7 +65,7 @@ case "${DISTRO}" in
     fedora|mageia)
         PKGR="dnf";
         # Just a dummy pre-install to simplify RUN step below
-        PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
+        PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
         # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
         PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en bc"
@@ -78,7 +74,7 @@ case "${DISTRO}" in
         PKGR="dnf"
         # "zypper --non-interactive"
         # Just a dummy pre-install to simplify RUN step below
-        PRE_PRE_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
+        PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
         PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua spectool bc"
         ;;
@@ -119,9 +115,13 @@ if [[ $PKGR == "dnf" ]]; then
   $PKGR -y install dnf-plugins-core
 fi
 
-${PKGR} -y install ${PRE_PRE_PACKAGES}
+${PKGR} -y install ${PRIMARY_REPO_PACKAGES}
+# if SECONDARY_REPO_PACKAGES is set, install them
+if test -n "${SECONDARY_REPO_PACKAGES-}"; then
+  ${PKGR} -y install ${SECONDARY_REPO_PACKAGES}
+fi
 
-/tmp/fix-getpagespeed-repo.sh
+/tmp/fix-repos.sh
 
 ${PKGR} -y install ${PRE_PACKAGES}
 
