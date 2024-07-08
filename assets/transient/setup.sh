@@ -24,7 +24,6 @@ CONFIG_MANAGER="yum-config-manager"
 # yum-utils is provided by "dnf-utils" in recent OS versions, but it always brings up yum-config-manager
 PACKAGES="rpm-build rpmdevtools yum-utils rpmlint"
 echo "DISTRO: ${DISTRO}, RHEL: ${RHEL}, AMZN: ${AMZN}"
-PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm";
 case "${DISTRO}" in
     amazonlinux|centos|cloudrouter*centos)
         # Amazon Linux 2023 does not support EPEL or EPEL-like repositories
@@ -32,10 +31,12 @@ case "${DISTRO}" in
           echo "Amazon Linux 2023 does not support EPEL or EPEL-like repositories"
           PKGR="dnf";
           CONFIG_MANAGER="dnf config-manager"
+          PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm";
           PRE_PACKAGES="dnf-plugins-core"
           PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive bc"
         else
           # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
+          PRIMARY_REPO_PACKAGES="http://mirror.yandex.ru/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
           SECONDARY_REPO_PACKAGES="epel-release centos-release-scl";
           PRE_PACKAGES="epel-release"
           # bypassing weird bug?
@@ -63,6 +64,8 @@ case "${DISTRO}" in
         ;;
     fedora|mageia)
         PKGR="dnf";
+        # Just a dummy pre-install to simplify RUN step below
+        PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
         # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
         PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en bc"
@@ -70,6 +73,8 @@ case "${DISTRO}" in
     opensuse)
         PKGR="dnf"
         # "zypper --non-interactive"
+        # Just a dummy pre-install to simplify RUN step below
+        PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
         PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua spectool bc"
         ;;
@@ -110,7 +115,7 @@ if [[ $PKGR == "dnf" ]]; then
   $PKGR -y install dnf-plugins-core
 fi
 
-${PKGR} -y install ${PRIMARY_REPO_PACKAGES} || true
+${PKGR} -y install ${PRIMARY_REPO_PACKAGES}
 # if SECONDARY_REPO_PACKAGES is set, install them
 if test -n "${SECONDARY_REPO_PACKAGES-}"; then
   ${PKGR} -y install ${SECONDARY_REPO_PACKAGES}
