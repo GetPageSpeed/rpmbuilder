@@ -21,6 +21,21 @@ SLES_MAJOR=${SLES::-2}
 echo "%dist .sles${SLES_MAJOR}" > /etc/rpm/macros.custom
 fi
 
+# if RHEL exactly 7, fix SCLO repos:
+if ((RHEL == 7)); then
+  # disable mirrorlist, enable and replace entire line with baseurl (only one line in the file):
+  VAULT_VER="7.9.2009"
+  SCLO_BASE_NEW_URL="https://vault.centos.org/${VAULT_VER}/sclo/x86_64/sclo/"
+  sed -i.orig -e '/mirrorlist=/d' \
+    -e "0,/baseurl=/s@.*baseurl=.*@baseurl=${SCLO_BASE_NEW_URL}@" \
+    /etc/yum.repos.d/CentOS-SCLo-scl.repo
+  SCLO_RH_NEW_URL="https://vault.centos.org/${VAULT_VER}/sclo/x86_64/rh/"
+  echo "New SCLO RH URL: ${SCLO_RH_NEW_URL}"
+  sed -i.orig -e '/mirrorlist=/d' \
+    -e "0,/^#\?baseurl=/s@^#\?baseurl=.*@baseurl=${SCLO_RH_NEW_URL}@" \
+    /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+fi
+
 if ((RHEL > 0 && RHEL <= 7)); then
   # set up desired user-agent by patching yum
   sed -ri 's@^default_grabber\.opts\.user_agent\s+.*@default_grabber.opts.user_agent = "XXXXXXXXXX"@' \
