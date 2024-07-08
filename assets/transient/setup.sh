@@ -37,11 +37,12 @@ case "${DISTRO}" in
         else
           # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
           PRIMARY_REPO_PACKAGES="http://mirror.yandex.ru/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
-          SECONDARY_REPO_PACKAGES="epel-release centos-release-scl";
+          SECONDARY_REPO_PACKAGES="epel-release";
           PRE_PACKAGES="epel-release"
           # bypassing weird bug?
           # we do this whole concept of PRE_PRE because for amzn2 this release pkg is in our repo:
           if [[ ${RELEASE_EPEL} -le 7 ]]; then
+            SECONDARY_REPO_PACKAGES="${SECONDARY_REPO_PACKAGES} centos-release-scl";
             # yum-plugin-versionlock required to freeze our patched version of yum-builddep script
             # we also freeze "yum" for keeping User-Agent hack
             PACKAGES="${PACKAGES} yum-plugin-versionlock bc"
