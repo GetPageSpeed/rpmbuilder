@@ -36,7 +36,7 @@ case "${DISTRO}" in
           PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive bc"
         else
           # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
-          PRIMARY_REPO_PACKAGES="http://mirror.yandex.ru/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+          PRIMARY_REPO_PACKAGES="https://epel.cloud/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
           SECONDARY_REPO_PACKAGES="epel-release";
           PRE_PACKAGES="epel-release"
           # bypassing weird bug?
