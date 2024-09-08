@@ -95,6 +95,8 @@ function docker-image-alt-name() {
 function build() {
     DISTRO=${1}
     VERSION=${2}
+    # Ensure buildx is set up and ready for multi-architecture builds
+    docker buildx create --use --name multiarch-builder --driver docker-container || true
     cd "${DISTRO}/${VERSION}" \
         && docker buildx build --platform linux/amd64,linux/arm64 -t $(docker-image-name ${DISTRO} ${VERSION}) -t $(docker-image-alt-name ${DISTRO} ${VERSION}) .
     cd -
