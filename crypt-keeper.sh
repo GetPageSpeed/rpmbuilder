@@ -97,8 +97,19 @@ function build() {
     VERSION=${2}
     # Ensure buildx is set up and ready for multi-architecture builds
     docker buildx create --use --name multiarch-builder --driver docker-container || true
+    # Build and load amd64 architecture image locally
+    echo "Building amd64 architecture image for ${DISTRO}-${VERSION}..."
     cd "${DISTRO}/${VERSION}" \
-        && docker buildx build --platform linux/amd64,linux/arm64 -t $(docker-image-name ${DISTRO} ${VERSION}) -t $(docker-image-alt-name ${DISTRO} ${VERSION}) .
+        && docker buildx build --platform linux/amd64 \
+        --load \
+        -t "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO}-${VERSION}-amd64" .
+
+    # Build and load arm64 architecture image locally
+    echo "Building arm64 architecture image for ${DISTRO}-${VERSION}..."
+    docker buildx build --platform linux/arm64 \
+        --load \
+        -t "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO}-${VERSION}-arm64" .
+
     cd -
 }
 
@@ -106,6 +117,14 @@ function push() {
     DISTRO=${1}
     VERSION=${2}
     docker push --all-tags "${DOCKER_REGISTRY_USER}/rpmbuilder" # $(docker-image-name ${DISTRO} ${VERSION})
+    # Combine and push multi-architecture manifest with both tags
+    echo "Combining and pushing multi-architecture image with multiple tags..."
+    docker buildx imagetools create \
+      --tag "$(docker-image-name ${DISTRO} ${VERSION})" \
+      --tag "$(docker-image-alt-name ${DISTRO} ${VERSION})" \
+      "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO}-${VERSION}-amd64" \
+      "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO}-${VERSION}-arm64" \
+      --push
 }
 
 
