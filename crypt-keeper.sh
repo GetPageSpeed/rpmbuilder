@@ -54,7 +54,7 @@ function generate() {
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
     cat > ${DOCKERFILE} << EOF
 FROM ${FROM_DISTRO}:${FROM_RELEASE_TAG}
-MAINTAINER "Danila Vershinin" <info@getpagespeed.com>
+LABEL maintainer="Danila Vershinin <info@getpagespeed.com>"
 
 ENV WORKSPACE=${WORKSPACE} \\
     SOURCES=${SOURCES} \\
@@ -103,13 +103,14 @@ function build() {
         && docker buildx build --platform linux/amd64 \
         --load \
         -t "$(docker-image-name ${DISTRO} ${VERSION})-amd64" .
+    echo "Build status of ${DISTRO}-${VERSION} amd64 image: $?"
 
     # Build and load arm64 architecture image locally
     echo "Building arm64 architecture image for ${DISTRO}-${VERSION}..."
     docker buildx build --platform linux/arm64 \
         --load \
         -t "$(docker-image-name ${DISTRO} ${VERSION})-arm64" .
-
+    echo "Build status of ${DISTRO}-${VERSION} arm64 image: $?"
     cd -
 }
 
@@ -123,8 +124,6 @@ function push() {
     TAG_AMD64="$(docker-image-name ${DISTRO} ${VERSION})-amd64"
     TAG_ARM64="$(docker-image-name ${DISTRO} ${VERSION})-arm64"
 
-    # Generate the main tags for the multi-architecture image
-    MAIN_TAG="$(docker-image-name ${DISTRO} ${VERSION})"
     # Combine and push multi-architecture manifest with both tags
     echo "Combining and pushing multi-architecture image with multiple tags..."
     docker buildx imagetools create \
@@ -142,6 +141,8 @@ function test() {
     DISTRO=${1}
     VERSION=${2}
     docker run --rm --platform linux/amd64 -v $(pwd)/tests/hello:/sources $(docker-image-name ${DISTRO} ${VERSION}) build
+    # Test arm64 build
+    docker run --rm --platform linux/arm64 -v $(pwd)/tests/hello:/sources $(docker-image-name ${DISTRO} ${VERSION}) build
 }
 
 case "$1" in
