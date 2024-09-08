@@ -96,7 +96,7 @@ function build() {
     DISTRO=${1}
     VERSION=${2}
     cd "${DISTRO}/${VERSION}" \
-        && docker build -t $(docker-image-name ${DISTRO} ${VERSION}) -t $(docker-image-alt-name ${DISTRO} ${VERSION}) .
+        && docker buildx build --platform linux/amd64,linux/arm64 -t $(docker-image-name ${DISTRO} ${VERSION}) -t $(docker-image-alt-name ${DISTRO} ${VERSION}) .
     cd -
 }
 
