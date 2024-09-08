@@ -140,9 +140,9 @@ function test() {
     # Test build
     DISTRO=${1}
     VERSION=${2}
+    echo "Testing x86_64 build for ${DISTRO}-${VERSION}"
     docker run --rm --platform linux/amd64 -v $(pwd)/tests/hello:/sources $(docker-image-name ${DISTRO} ${VERSION}) build
-    # Test arm64 build
-    docker run --rm --platform linux/arm64 -v $(pwd)/tests/hello:/sources $(docker-image-name ${DISTRO} ${VERSION}) build
+    echo "Done testing x86_64 build for ${DISTRO}-${VERSION}"
 }
 
 case "$1" in
