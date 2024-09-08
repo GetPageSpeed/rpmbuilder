@@ -10,7 +10,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
      - name: Checkout to repository
-       uses: actions/checkout@v3
+       uses: actions/checkout@v4
      - name: Set matrix data
        id: set-matrix
        run: echo "matrix=$(jq -c . < ./distro_versions.json)" >> $GITHUB_OUTPUT
@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.configure.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: "Set up RPM client User-Agent for images"
         run: |
           sed -i "s@XXXXXXXXXX@${{ secrets.RPMBUILDER_UA }}@g" assets/transient/fix-repos.sh

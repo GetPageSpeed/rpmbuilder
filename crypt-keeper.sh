@@ -143,7 +143,7 @@ function test() {
     # Test build
     DISTRO=${1}
     VERSION=${2}
-    docker run --rm -v $(pwd)/tests/hello:/sources $(docker-image-name ${DISTRO} ${VERSION}) build
+    docker run --rm --platform linux/amd64 -v $(pwd)/tests/hello:/sources $(docker-image-name ${DISTRO} ${VERSION}) build
 }
 
 case "$1" in
