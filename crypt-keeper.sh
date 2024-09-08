@@ -102,15 +102,13 @@ function build() {
     cd "${DISTRO}/${VERSION}" \
         && docker buildx build --platform linux/amd64 \
         --load \
-        -t "$(docker-image-name ${DISTRO} ${VERSION})" \
-        -t "$(docker-image-alt-name ${DISTRO} ${VERSION})" .
+        -t "$(docker-image-name ${DISTRO} ${VERSION})-amd64" .
 
     # Build and load arm64 architecture image locally
     echo "Building arm64 architecture image for ${DISTRO}-${VERSION}..."
     docker buildx build --platform linux/arm64 \
         --load \
-        -t "$(docker-image-name ${DISTRO} ${VERSION})" \
-        -t "$(docker-image-alt-name ${DISTRO} ${VERSION})" .
+        -t "$(docker-image-name ${DISTRO} ${VERSION})-arm64" .
 
     cd -
 }
@@ -121,14 +119,19 @@ function push() {
     # Generate the main and alternate tags for the multi-architecture image
     MAIN_TAG="$(docker-image-name ${DISTRO} ${VERSION})"
     ALT_TAG="$(docker-image-alt-name ${DISTRO} ${VERSION})"
+    # Generate the main tags for architecture-specific images
+    TAG_AMD64="$(docker-image-name ${DISTRO} ${VERSION})-amd64"
+    TAG_ARM64="$(docker-image-name ${DISTRO} ${VERSION})-arm64"
 
+    # Generate the main tags for the multi-architecture image
+    MAIN_TAG="$(docker-image-name ${DISTRO} ${VERSION})"
     # Combine and push multi-architecture manifest with both tags
     echo "Combining and pushing multi-architecture image with multiple tags..."
     docker buildx imagetools create \
       --tag "${MAIN_TAG}" \
       --tag "${ALT_TAG}" \
-      "${MAIN_TAG}" \
-      "${ALT_TAG}"
+      "${TAG_AMD64}" \
+      "${TAG_ARM64}"
 
     # Push the multi-architecture manifest to the Docker registry under all tags
     echo "Pushing multi-architecture image under all tags..."
