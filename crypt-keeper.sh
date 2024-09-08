@@ -133,11 +133,6 @@ function push() {
       "${TAG_AMD64}" \
       "${TAG_ARM64}"
 
-    # Push the multi-architecture manifest to the Docker registry under all tags
-    echo "Pushing multi-architecture image under all tags..."
-    docker push "${MAIN_TAG}"
-    docker push "${ALT_TAG}"
-
     echo "Multi-architecture image has been pushed successfully with tags: ${MAIN_TAG} and ${ALT_TAG}."
 }
 
