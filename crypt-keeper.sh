@@ -116,15 +116,18 @@ function build() {
 function push() {
     DISTRO=${1}
     VERSION=${2}
-    docker push --all-tags "${DOCKER_REGISTRY_USER}/rpmbuilder" # $(docker-image-name ${DISTRO} ${VERSION})
+    # docker push --all-tags "${DOCKER_REGISTRY_USER}/rpmbuilder" # $(docker-image-name ${DISTRO} ${VERSION})
     # Combine and push multi-architecture manifest with both tags
     echo "Combining and pushing multi-architecture image with multiple tags..."
     docker buildx imagetools create \
       --tag "$(docker-image-name ${DISTRO} ${VERSION})" \
       --tag "$(docker-image-alt-name ${DISTRO} ${VERSION})" \
       "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO}-${VERSION}-amd64" \
-      "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO}-${VERSION}-arm64" \
-      --push
+      "${DOCKER_REGISTRY_USER}/rpmbuilder:${DISTRO}-${VERSION}-arm64"
+    # Push the multi-architecture manifest to the Docker registry
+    echo "Pushing multi-architecture image..."
+    docker push "$(docker-image-name ${DISTRO} ${VERSION})"
+    docker push "$(docker-image-alt-name ${DISTRO} ${VERSION})"
 }
 
 
