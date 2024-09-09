@@ -31,13 +31,13 @@ if [[ -n ${ENABLE_REPOS} ]]; then
 fi
 
 # Use custom rpmlint config per repository, if such exists
-[ -f "${SOURCES}/rpmlint.config" ] && mv -f ${SOURCES}/rpmlint.config /etc/rpmlint/custom.config
+[ -f "${SOURCES}/rpmlint.config" ] && mv -f "${SOURCES}"/rpmlint.config /etc/rpmlint/custom.config
 # Run optional per-repo file with extra build preparations needed like setting up more repos
-[ -f ${SOURCES}/prepare.sh ] && bash ${SOURCES}/prepare.sh
+[ -f "${SOURCES}"/prepare.sh ] && bash "${SOURCES}"/prepare.sh
 
 # each repo can go with rpmmacros (useful for building multiple branches while retaining same spec)
-[ -f ${SOURCES}/rpmmacros ] \
-  && cat ${SOURCES}/rpmmacros >> /root/.rpmmacros \
+[ -f "${SOURCES}"/rpmmacros ] \
+  && cat "${SOURCES}"/rpmmacros >> /root/.rpmmacros \
   && chown root:root /root/.rpmmacros
 
 # Use rpm instead of rpmbuild to avoid bad exit in EL6
@@ -48,12 +48,12 @@ RPM_BUILD_SPECS=$(rpm --eval '%{_specdir}')
 
 echo $ RPM_BUILD_SPECS
 # copy any .spec filess to rpmbuild/SPECS directory
-find ${SOURCES} -mindepth 1 -maxdepth 1 -name "*.spec" \
-    -exec cp -R {} ${RPM_BUILD_SPECS}/. \;
+find "${SOURCES}" -mindepth 1 -maxdepth 1 -name "*.spec" \
+    -exec cp -R {} "${RPM_BUILD_SPECS}"/. \;
 
 # copy any non-spec files/dirs to rpmbuild/SOURCES directory
-find ${SOURCES} -mindepth 1 -maxdepth 1 ! -name "*.spec" \
-    -exec cp -R {} ${RPM_BUILD_SOURCES}/. \;
+find "${SOURCES}" -mindepth 1 -maxdepth 1 ! -name "*.spec" \
+    -exec cp -R {} "${RPM_BUILD_SOURCES}"/. \;
 
 # fix permissions on working copy
 chown root:root /root/rpmbuild
@@ -73,39 +73,35 @@ if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
   echo x86_64 > /etc/yum/vars/basearch
 fi
 
-total_modules=$(find ${RPM_BUILD_SPECS} -name "*.spec" | wc -l)
-success_count=0
-fail_count=0
-failure_tolerance=0.1  # Example: Allow up to 10% of modules to fail
-
-for specFile in ${RPM_BUILD_SPECS}/*.spec; do
-
+# define function to build a single spec file
+build_spec() {
+  local specFile=$1
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # check the spec file for obvious errors using rpmlint
-    rpmlint $specFile
+    rpmlint "$specFile"
   fi
 
   # install build requires
-  if ! ${BUILDDEP_CMD} -y $specFile; then
+  if ! ${BUILDDEP_CMD} -y "$specFile"; then
     pkgr clean all
-    ${BUILDDEP_CMD} -y $specFile
+    ${BUILDDEP_CMD} -y "$specFile"
   fi
 
   # repeat step for chosen arch
   if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
-    if ! ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile; then
+    if ! ${RPMBUILD_SETARCH} "${BUILDDEP_CMD}" -y "$specFile"; then
       pkgr clean all
-      ${RPMBUILD_SETARCH} ${BUILDDEP_CMD} -y $specFile
+      ${RPMBUILD_SETARCH} "${BUILDDEP_CMD}" -y "$specFile"
     fi
   fi
 
-  spectool --sourcedir --get-files $specFile
+  spectool --sourcedir --get-files "$specFile"
 
-  # build SRPM, also allows to fail quicker
-  rpmbuild -bs $specFile
+  # build source RPM, also allows to fail quicker
+  rpmbuild -bs "$specFile"
 
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
-    # SRPM built successfully. Check it using rpmlint
+    # Source RPM built successfully. Check it using rpmlint
     if test -f /etc/rpmlint/custom.config && test -d /etc/xdg/rpmlint; then
       # if we quote the wildcard in the argument to rpmlint, it will trigger
       # to E: multiple-specfiles
@@ -116,23 +112,12 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
     fi
   fi
 
-  mv ${RPM_BUILD_SRPMS}/*.rpm ${OUTPUT}
+  mv "${RPM_BUILD_SRPMS}"/*.rpm "${OUTPUT}"
 
   if [[ -z ${SRPM_ONLY} ]]; then
-    set +e  # disable exit-on-error to allow for failing builds
+
     # attempting to build RPM now
-    ${RPMBUILD_SETARCH} rpmbuild -ba $specFile
-
-    if [[ $? -eq 0 ]]; then
-      success_count=$((success_count+1))
-    else
-      fail_count=$((fail_count+1))
-    fi
-
-    if [[ $(echo "scale=2; $fail_count / $total_modules" | bc) > $failure_tolerance ]]; then
-      echo "Failure tolerance exceeded. Exiting build."
-      exit 1
-    fi
+    ${RPMBUILD_SETARCH} rpmbuild -ba "$specFile"
 
     if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
       # RPMs built successfully. Check using rpmlint
@@ -140,17 +125,35 @@ for specFile in ${RPM_BUILD_SPECS}/*.spec; do
       # * their rpmlint failure is never crucial to the actual app's delivery!
       # * we can never fix these: "E: description-line-too-long C This package provides debug information for package <some lengthy name>"
       # * because there is no control of it and some packages just have to be lengthy in names
-      find ${RPM_BUILD_RPMS} -type f \
+      find "${RPM_BUILD_RPMS}" -type f \
         -not -name "*-debuginfo-*" -not -name "*-debugsource-*" -name "*.rpm" \
         -exec rpmlint {} \;
     fi
-    mv ${RPM_BUILD_RPMS}/*/*.rpm ${OUTPUT}
-
-    set -e  # re-enable exit-on-error
+    mv "${RPM_BUILD_RPMS}"/*/*.rpm "${OUTPUT}"
   fi
+  return 0
+}
+
+total_modules=$(find "${RPM_BUILD_SPECS}" -name "*.spec" | wc -l)
+success_count=0
+fail_count=0
+failure_tolerance=0.1  # Example: Allow up to 10% of modules to fail
+
+for specFile in "${RPM_BUILD_SPECS}"/*.spec; do
+  if build_spec "${specFile}"; then
+    success_count=$((success_count + 1))
+  else
+    fail_count=$((fail_count + 1))
+  fi
+
+  if [[ $(echo "scale=2; $fail_count / $total_modules" | bc) > $failure_tolerance ]]; then
+    echo "Failure tolerance exceeded. Exiting build."
+    exit 1
+  fi
+
 done
 
 # fix uids
 if [ -z "${OUTPUT_UID}" ]; then
-   chown -R ${OUTPUT_UID}:${OUTPUT_UID} ${OUTPUT}/*
+   chown -R "${OUTPUT_UID}:${OUTPUT_UID}" "${OUTPUT}"/*
 fi
