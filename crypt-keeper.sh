@@ -129,8 +129,8 @@ function push() {
     docker buildx imagetools create \
       --tag "${MAIN_TAG}" \
       --tag "${ALT_TAG}" \
-      "${TAG_AMD64}" \
-      "${TAG_ARM64}"
+      "docker://${TAG_AMD64}" \
+      "docker://${TAG_ARM64}"
 
     echo "Multi-architecture image has been pushed successfully with tags: ${MAIN_TAG} and ${ALT_TAG}."
 }
