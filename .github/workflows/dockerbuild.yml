@@ -31,14 +31,14 @@ jobs:
       - name: Generate Dockerfile
         run: ./crypt-keeper.sh generate ${{ matrix.os }} ${{ matrix.version }}
 
+      - name: Log in to Docker Hub
+        run: docker login -u="${{ secrets.DOCKER_USER }}" -p="${{ secrets.DOCKER_PASS }}"
+
       - name: Build Docker image
         run: ./crypt-keeper.sh build ${{ matrix.os }} ${{ matrix.version }}
 
       - name: Test RPM Build using the image
         run: ./crypt-keeper.sh test ${{ matrix.os }} ${{ matrix.version }}
-
-      - name: Log in to Docker Hub
-        run: docker login -u="${{ secrets.DOCKER_USER }}" -p="${{ secrets.DOCKER_PASS }}"
 
       - name: Push to Docker Hub
         run: ./crypt-keeper.sh push ${{ matrix.os }} ${{ matrix.version }}
