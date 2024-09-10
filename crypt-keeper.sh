@@ -112,6 +112,8 @@ function build() {
         -t "$(docker-image-name ${DISTRO} ${VERSION})-arm64" .
     echo "Build status of ${DISTRO}-${VERSION} arm64 image: $?"
     cd -
+    # list images
+    docker images
 }
 
 function push() {
