@@ -30,12 +30,13 @@ function generate() {
     fi
 
     ROOT=$(pwd)/${DISTRO}/${RELEASE}/
+    # shellcheck disable=SC2034
     ASSETS=${ROOT}/assets
     DOCKERFILE=${ROOT}/Dockerfile
     rm -rf "${ROOT}" && mkdir -p "${ROOT}"
 
     # prepare files
-    cp -R ./assets ${ROOT}/.
+    cp -R ./assets "${ROOT}"/.
     # cp LICENCE README.md
 
     # header
@@ -52,7 +53,7 @@ function generate() {
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
-    cat > ${DOCKERFILE} << EOF
+    cat > "${DOCKERFILE}" << EOF
 FROM ${FROM_DISTRO}:${FROM_RELEASE_TAG}
 LABEL maintainer="Danila Vershinin <info@getpagespeed.com>"
 
@@ -75,7 +76,7 @@ EOF
 
 function map-all() {
     while IFS=' ' read -r -a input; do
-        $1 ${input[0]} ${input[1]}
+        $1 "${input[0]}" "${input[1]}"
     done < ./defaults
 }
 
@@ -102,14 +103,14 @@ function build() {
     cd "${DISTRO}/${VERSION}" \
         && docker buildx build --platform linux/amd64 \
         --load \
-        -t "$(docker-image-name ${DISTRO} ${VERSION})-amd64" .
+        -t "$(docker-image-name "${DISTRO}" "${VERSION}")-amd64" .
     echo "Build status of ${DISTRO}-${VERSION} amd64 image: $?"
 
     # Build and load arm64 architecture image locally
     echo "Building arm64 architecture image for ${DISTRO}-${VERSION}..."
     docker buildx build --platform linux/arm64 \
         --load \
-        -t "$(docker-image-name ${DISTRO} ${VERSION})-arm64" .
+        -t "$(docker-image-name "${DISTRO}" "${VERSION}")-arm64" .
     echo "Build status of ${DISTRO}-${VERSION} arm64 image: $?"
     cd -
     # list images
@@ -120,19 +121,19 @@ function push() {
     DISTRO=${1}
     VERSION=${2}
     # Generate the main and alternate tags for the multi-architecture image
-    MAIN_TAG="$(docker-image-name ${DISTRO} ${VERSION})"
-    ALT_TAG="$(docker-image-alt-name ${DISTRO} ${VERSION})"
+    MAIN_TAG="$(docker-image-name "${DISTRO}" "${VERSION}")"
+    ALT_TAG="$(docker-image-alt-name "${DISTRO}" "${VERSION}")"
     # Generate the main tags for architecture-specific images
-    TAG_AMD64="$(docker-image-name ${DISTRO} ${VERSION})-amd64"
-    TAG_ARM64="$(docker-image-name ${DISTRO} ${VERSION})-arm64"
+    TAG_AMD64="$(docker-image-name "${DISTRO}" "${VERSION}")-amd64"
+    TAG_ARM64="$(docker-image-name "${DISTRO}" "${VERSION}")-arm64"
 
     # Combine and push multi-architecture manifest with both tags
     echo "Combining and pushing multi-architecture image with multiple tags..."
     docker buildx imagetools create \
       --tag "${MAIN_TAG}" \
       --tag "${ALT_TAG}" \
-      "docker://${TAG_AMD64}" \
-      "docker://${TAG_ARM64}"
+      "${TAG_AMD64}" \
+      "${TAG_ARM64}"
 
     echo "Multi-architecture image has been pushed successfully with tags: ${MAIN_TAG} and ${ALT_TAG}."
 }
@@ -143,15 +144,15 @@ function test() {
     DISTRO=${1}
     VERSION=${2}
     echo "Testing x86_64 build for ${DISTRO}-${VERSION}"
-    docker run --rm --platform linux/amd64 -v $(pwd)/tests/hello:/sources $(docker-image-name ${DISTRO} ${VERSION}) build
+    docker run --rm --platform linux/amd64 -v "$(pwd)"/tests/hello:/sources "$(docker-image-name "${DISTRO}" "${VERSION}")" build
     echo "Done testing x86_64 build for ${DISTRO}-${VERSION}"
 }
 
 case "$1" in
     generate|build|push|test)
         if [ "$2" == "all" ]; then
-            map-all $1
+            map-all "$1"
         else
-            $1 $2 $3
+            "$1" "$2" "$3"
         fi ;;
 esac

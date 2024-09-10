@@ -73,9 +73,60 @@ if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
   echo x86_64 > /etc/yum/vars/basearch
 fi
 
+# Universal wrapper function for repoquery across different RHEL/CentOS versions
+universal_repoquery() {
+    local package=$1
+
+    # Check if dnf or repoquery is available
+    if command -v dnf > /dev/null 2>&1; then
+        # RHEL 8+ and Fedora
+        dnf repoquery --pkgnarrow=repos -q "${package}"
+    elif command -v repoquery > /dev/null 2>&1; then
+        # RHEL 7 and below
+        repoquery --pkgnarrow=repos -q "${package}"
+    else
+        # If neither is available, return empty (indicating no packages found)
+        echo ""
+    fi
+}
+
+# Function to check if all packages from a spec file are present in the repository
+check_packages_in_repo() {
+    local spec_file=$1
+
+    # Generate the list of packages from the .spec file
+    local packages
+    packages=$(rpmspec -q --qf '%{NAME}-%{EPOCH}%{VERSION}-%{RELEASE}\n' "${spec_file}" | sed 's/(none)//g')
+
+    # Loop through each package and check if it exists in the repository
+    for package in $packages; do
+        # Use the universal_repoquery function to check if the package is present
+        local result
+
+        result=$(universal_repoquery "${package}")
+
+        # If the result is empty, it means the package is NOT present
+        if [[ -z "${result}" ]]; then
+            echo "Package ${package} is NOT present in the repository."
+            return 1  # Exit with code 1 if any package is missing
+        fi
+    done
+
+    # If all packages are present
+    echo "All packages from ${spec_file} are present in the repository."
+    return 0  # Exit with code 0 if all packages are present
+}
+
 # define function to build a single spec file
 build_spec() {
   local specFile=$1
+  if check_packages_in_repo "${specFile}"; then
+      echo "Skipping build as all packages are present."
+      return 0
+  else
+      echo "Building packages as some are missing."
+      # Place build commands here
+  fi
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # check the spec file for obvious errors using rpmlint
     rpmlint "$specFile"
@@ -84,7 +135,10 @@ build_spec() {
   # install build requires
   if ! ${BUILDDEP_CMD} -y "$specFile"; then
     pkgr clean all
-    ${BUILDDEP_CMD} -y "$specFile"
+    if ! ${BUILDDEP_CMD} -y "$specFile"; then
+      echo "Failed to install build dependencies for $specFile"
+      return 1
+    fi
   fi
 
   # repeat step for chosen arch
@@ -106,7 +160,7 @@ build_spec() {
       # if we quote the wildcard in the argument to rpmlint, it will trigger
       # to E: multiple-specfiles
       # so we need to ensure bash wildcard is used/unquoted
-      rpmlint "{RPM_BUILD_SRPMS}"/*.rpm --rpmlintrc /etc/rpmlint/custom.config
+      rpmlint "${RPM_BUILD_SRPMS}"/*.rpm --rpmlintrc /etc/rpmlint/custom.config
     else
       rpmlint "${RPM_BUILD_SRPMS}"/*.rpm
     fi
