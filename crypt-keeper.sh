@@ -138,14 +138,14 @@ function push() {
     echo "Pushing multi-architecture image under the main tag..."
     docker push "${MAIN_TAG}"
 
-    echo "Combining and pushing multi-architecture image with the alternate tag..."
-    docker buildx imagetools create \
-      --tag "${ALT_TAG}" \
-      "${TAG_AMD64}" \
-      "${TAG_ARM64}"
+    # Now, create and push the alternate tag
+    echo "Combining and creating manifest under the alternate tag..."
+    docker manifest create "${ALT_TAG}" "${MAIN_TAG}"
 
     echo "Pushing multi-architecture image under the alternate tag..."
-    docker push "${ALT_TAG}"
+    docker manifest push "${ALT_TAG}"
+
+    echo "Multi-architecture image has been pushed successfully with tags: ${MAIN_TAG} and ${ALT_TAG}."
 }
 
 
