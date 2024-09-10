@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo pipefail
+set -exo pipefail
 DOCKER_REGISTRY_USER=getpagespeed
 
 declare -A DISTRO_DISTS=( [centos]=el [fedora]=fc [amazonlinux]=amzn [opensuse]=sles )
@@ -128,19 +128,21 @@ function push() {
     TAG_ARM64="$(docker-image-name "${DISTRO}" "${VERSION}")-arm64"
 
     # Combine and push multi-architecture manifest with both tags
-    echo "Combining and pushing multi-architecture image with multiple tags..."
+    echo "Combining and pushing multi-architecture image with the main tag..."
     docker buildx imagetools create \
       --tag "${MAIN_TAG}" \
       "${TAG_AMD64}" \
       "${TAG_ARM64}"
 
+    # Push the multi-architecture manifest to Docker Hub under all tags
+    echo "Pushing multi-architecture image under the main tag..."
+    docker push "${MAIN_TAG}"
+
+    echo "Combining and pushing multi-architecture image with the alternate tag..."
     docker buildx imagetools create \
       --tag "${ALT_TAG}" \
       "${TAG_AMD64}" \
       "${TAG_ARM64}"
-    # Push the multi-architecture manifest to Docker Hub under all tags
-    echo "Pushing multi-architecture image under the main tag..."
-    docker push "${MAIN_TAG}"
 
     echo "Pushing multi-architecture image under the alternate tag..."
     docker push "${ALT_TAG}"
