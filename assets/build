@@ -185,7 +185,6 @@ build_spec() {
     fi
     mv "${RPM_BUILD_RPMS}"/*/*.rpm "${OUTPUT}"
   fi
-  return 0
 }
 
 total_modules=$(find "${RPM_BUILD_SPECS}" -name "*.spec" | wc -l)
