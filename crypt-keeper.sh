@@ -96,56 +96,20 @@ function docker-image-alt-name() {
 function build() {
     DISTRO=${1}
     VERSION=${2}
+    MAIN_TAG="$(docker-image-name "${DISTRO}" "${VERSION}")"
+    ALT_TAG="$(docker-image-alt-name "${DISTRO}" "${VERSION}")"
     # Ensure buildx is set up and ready for multi-architecture builds
     docker buildx create --use --name multiarch-builder --driver docker-container || true
-    # Build and load amd64 architecture image locally
-    echo "Building amd64 architecture image for ${DISTRO}-${VERSION}..."
-    cd "${DISTRO}/${VERSION}" \
-        && docker buildx build --platform linux/amd64 \
-        --load \
-        -t "$(docker-image-name "${DISTRO}" "${VERSION}")-amd64" .
-    echo "Build status of ${DISTRO}-${VERSION} amd64 image: $?"
-
-    # Build and load arm64 architecture image locally
-    echo "Building arm64 architecture image for ${DISTRO}-${VERSION}..."
-    docker buildx build --platform linux/arm64 \
-        --load \
-        -t "$(docker-image-name "${DISTRO}" "${VERSION}")-arm64" .
-    echo "Build status of ${DISTRO}-${VERSION} arm64 image: $?"
+    cd "${DISTRO}/${VERSION}" && docker buildx build --platform linux/amd64,linux/arm64 --push \  # or use --load for a single architecture, or output as tar for saving locally
+      -t "${MAIN_TAG}" \
+      -t "${ALT_TAG}" .
     cd -
     # list images
     docker images
 }
 
 function push() {
-    DISTRO=${1}
-    VERSION=${2}
-    # Generate the main and alternate tags for the multi-architecture image
-    MAIN_TAG="$(docker-image-name "${DISTRO}" "${VERSION}")"
-    ALT_TAG="$(docker-image-alt-name "${DISTRO}" "${VERSION}")"
-    # Generate the main tags for architecture-specific images
-    TAG_AMD64="$(docker-image-name "${DISTRO}" "${VERSION}")-amd64"
-    TAG_ARM64="$(docker-image-name "${DISTRO}" "${VERSION}")-arm64"
-
-    # Combine and push multi-architecture manifest with both tags
-    echo "Combining and pushing multi-architecture image with the main tag..."
-    docker buildx imagetools create \
-      --tag "${MAIN_TAG}" \
-      "${TAG_AMD64}" \
-      "${TAG_ARM64}"
-
-    # Push the multi-architecture manifest to Docker Hub under all tags
-    echo "Pushing multi-architecture image under the main tag..."
-    docker push "${MAIN_TAG}"
-
-    # Now, create and push the alternate tag
-    echo "Combining and creating manifest under the alternate tag..."
-    docker manifest create "${ALT_TAG}" "${MAIN_TAG}"
-
-    echo "Pushing multi-architecture image under the alternate tag..."
-    docker manifest push "${ALT_TAG}"
-
-    echo "Multi-architecture image has been pushed successfully with tags: ${MAIN_TAG} and ${ALT_TAG}."
+    return
 }
 
 
