@@ -131,6 +131,10 @@ function push() {
     echo "Combining and pushing multi-architecture image with multiple tags..."
     docker buildx imagetools create \
       --tag "${MAIN_TAG}" \
+      "${TAG_AMD64}" \
+      "${TAG_ARM64}"
+
+    docker buildx imagetools create \
       --tag "${ALT_TAG}" \
       "${TAG_AMD64}" \
       "${TAG_ARM64}"
