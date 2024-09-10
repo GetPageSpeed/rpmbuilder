@@ -80,10 +80,10 @@ universal_repoquery() {
     # Check if dnf or repoquery is available
     if command -v dnf > /dev/null 2>&1; then
         # RHEL 8+ and Fedora
-        dnf repoquery --pkgnarrow=repos -q "${package}"
+        dnf repoquery -q "${package}"
     elif command -v repoquery > /dev/null 2>&1; then
         # RHEL 7 and below
-        repoquery --pkgnarrow=repos -q "${package}"
+        repoquery -q "${package}"
     else
         # If neither is available, return empty (indicating no packages found)
         echo ""

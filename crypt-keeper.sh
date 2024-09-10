@@ -102,12 +102,10 @@ function build() {
     docker buildx create --use --name multiarch-builder --driver docker-container || true
     cd "${DISTRO}/${VERSION}" && docker buildx build --platform linux/amd64,linux/arm64 --push -t "${MAIN_TAG}" -t "${ALT_TAG}" .
     cd -
-    # list images
-    docker images
 }
 
 function push() {
-    return
+    echo "Nothing to do, pushed in the build step"
 }
 
 
