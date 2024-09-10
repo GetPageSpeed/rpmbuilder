@@ -100,9 +100,7 @@ function build() {
     ALT_TAG="$(docker-image-alt-name "${DISTRO}" "${VERSION}")"
     # Ensure buildx is set up and ready for multi-architecture builds
     docker buildx create --use --name multiarch-builder --driver docker-container || true
-    cd "${DISTRO}/${VERSION}" && docker buildx build --platform linux/amd64,linux/arm64 --push \  # or use --load for a single architecture, or output as tar for saving locally
-      -t "${MAIN_TAG}" \
-      -t "${ALT_TAG}" .
+    cd "${DISTRO}/${VERSION}" && docker buildx build --platform linux/amd64,linux/arm64 --push -t "${MAIN_TAG}" -t "${ALT_TAG}" .
     cd -
     # list images
     docker images
