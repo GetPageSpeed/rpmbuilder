@@ -103,7 +103,10 @@ check_packages_in_repo() {
         # Use the universal_repoquery function to check if the package is present
         local result
 
-        result=$(universal_repoquery "${package}")
+        if ! result=$(universal_repoquery "${package}"); then
+            echo "Error while checking for package ${package} in the repository."
+            return 1
+        fi
 
         # If the result is empty, it means the package is NOT present
         if [[ -z "${result}" ]]; then
@@ -121,7 +124,7 @@ check_packages_in_repo() {
 build_spec() {
   local specFile=$1
   if check_packages_in_repo "${specFile}"; then
-      echo "Skipping build as all packages are present."
+      echo "Skipping build for ${specFile} as all packages are present in the repository."
       return 0
   else
       echo "Building packages as some are missing."
@@ -200,6 +203,7 @@ for specFile in "${RPM_BUILD_SPECS}"/*.spec; do
   fi
 
   if [[ $(echo "scale=2; $fail_count / $total_modules" | bc) > $failure_tolerance ]]; then
+    echo "Built $success_count specs successfully, but $fail_count failed out of $total_modules total spec files."
     echo "Failure tolerance exceeded. Exiting build."
     exit 1
   fi
@@ -207,6 +211,6 @@ for specFile in "${RPM_BUILD_SPECS}"/*.spec; do
 done
 
 # fix uids
-if [ -z "${OUTPUT_UID}" ]; then
+if [ -n "${OUTPUT_UID}" ]; then
    chown -R "${OUTPUT_UID}:${OUTPUT_UID}" "${OUTPUT}"/*
 fi
