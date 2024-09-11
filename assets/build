@@ -96,7 +96,7 @@ check_packages_in_repo() {
 
     # Generate the list of packages from the .spec file
     local packages
-    packages=$(rpmspec -q --qf '%{NAME}-%{EPOCH}%{VERSION}-%{RELEASE}\n' "${spec_file}" | sed 's/(none)//g')
+    packages=$(rpmspec -q --qf '%{NAME}-%{EPOCH}:%{VERSION}-%{RELEASE}.*\n' "${spec_file}" | sed 's/(none)://g')
 
     # Loop through each package and check if it exists in the repository
     for package in $packages; do
