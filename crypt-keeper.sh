@@ -68,6 +68,12 @@ ADD ./assets/transient/* /tmp/
 
 RUN DISTRO=${DISTRO} RELEASE=${RELEASE} RELEASE_EPEL=${RELEASE_EPEL} /tmp/setup.sh
 
+# We create images on schedule to facilitate faster builds that do not need to fetch meta on every build
+# but we still need to ensure that no metadata is cached for the GetPageSpeed repos to properly detect
+# dependencies and whether packages need to be built at all
+# Also this runs in a separate step to ensure that the base image goes into its own layer
+RUN /usr/bin/pkgr -y clean all && rm -rf /tmp/* && rm -rf /var/cache/* && /usr/bin/pkgr --disablerepo "getpagespeed*" makecache
+
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
 CMD ["build"]

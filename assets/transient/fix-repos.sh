@@ -3,15 +3,15 @@
 # by removing plugin and setting up the desired user-agent
 # Runs after installation of release package
 shopt -s extglob
-RHEL=$(rpm -E 0%{?rhel})
+RHEL=$(rpm -E "0%{?rhel}")
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
 
-SLES=$(rpm -E 0%{?suse_version})
+SLES=$(rpm -E "0%{?suse_version}")
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 SLES=${SLES##+(0)}
 
-if [[ $(rpm -E %{amzn}) == 2 ]]; then
+if [[ $(rpm -E "%{amzn}") == 2 ]]; then
   sed -i "s@redhat/7@amzn/2@g" /etc/yum.repos.d/getpagespeed-extras.repo
 fi
 
@@ -55,7 +55,7 @@ DNF_PLUGINS_DIR="/usr/lib/python*/site-packages/dnf-plugins"
 if test -f "/usr/bin/dnf"; then
   for D in $DNF_PLUGINS_DIR; do
     if test -d "$D"; then
-      \cp -f /tmp/user-agent.py $D/getpagespeed.py;
+      \cp -f /tmp/user-agent.py "$D"/getpagespeed.py;
     fi
   done
 fi

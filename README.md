@@ -1,4 +1,4 @@
-# RPM build containers for RedHat-based various distros
+# `rpmbuild` containers for RedHat-based various distros
 
 [![CI](https://github.com/GetPageSpeed/rpmbuilder/actions/workflows/dockerbuild.yml/badge.svg)](https://github.com/GetPageSpeed/rpmbuilder/actions/workflows/dockerbuild.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/getpagespeed/rpmbuilder.svg)](https://hub.docker.com/r/getpagespeed/rpmbuilder/)
 
@@ -14,7 +14,7 @@ Available versions can be located by visiting [Docker Hub Repository](https://hu
 
 ### Fetch image
 
-For example, to use RHEL 7 based image:
+For example, to use RHEL-7-based image:
 
 ```bash
 BUILDER_VERSION=el7
@@ -25,7 +25,8 @@ Most images are tagged with the `dist` RPM tag, so you can use `el7`, `el8`,
 `fc38` etc.
 
 ### Run
-In this example `SOURCE_DIR` contains the `.spec` file and sources for the the RPM we are building.
+In this example `SOURCE_DIR` contains the `.spec` file and sources for the RPM
+we are building.
 
 ```bash
 # set env variables for convenience
@@ -63,8 +64,8 @@ This command will drop you into a bash shell within the container. From here, yo
 ## Volumes
 The following volumes can be mounted from the host.
 
-| Volume  | Description |
-| :------------ | :------------ |
-| /sources | Source to build RPM from |
-| /output | Output directory where all built RPMs and SRPMs are extracted to |
-| /root/rpmbuild | rpmbuild directory for debugging etc |
+| Volume         | Description                                                      |
+|:---------------|:-----------------------------------------------------------------|
+| /sources       | Source to build RPM from                                         |
+| /output        | Output directory where all built RPMs and SRPMs are extracted to |
+| /root/rpmbuild | rpmbuild directory for debugging etc                             |

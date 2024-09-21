@@ -7,15 +7,15 @@ elif test -f /usr/lib/os-release; then
    . /usr/lib/os-release
 fi
 
-RHEL=$(rpm -E 0%{?rhel})
+RHEL=$(rpm -E "0%{?rhel}")
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
 
-AMZN=$(rpm -E 0%{?amzn})
+AMZN=$(rpm -E "0%{?amzn}")
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 AMZN=${AMZN##+(0)}
 
-FEDORA=$(rpm -E 0%{?fedora})
+FEDORA=$(rpm -E "0%{?fedora}")
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 FEDORA=${FEDORA##+(0)}
 
@@ -155,10 +155,6 @@ fi
 if test -f /etc/dnf/dnf.conf; then
   sed -i 's@best=True@best=0@' /etc/dnf/dnf.conf
 fi
-
-# ${PKGR} -y clean all && rm -rf /tmp/* && rm -rf /var/cache/*
-# we will create images on schedule to facilitate faster builds that do not need fetching meta on every build
-${PKGR} --disablerepo "getpagespeed*" makecache
 
 # Symlink packager command to /usr/bin/pkgr (yum or dnf)
 # The build script uses /usr/bin/pkgr to install build dependencies

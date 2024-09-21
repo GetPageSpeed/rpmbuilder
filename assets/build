@@ -17,6 +17,32 @@ if [[ -f /usr/bin/dnf ]]; then
   fi
 fi
 
+# Initialize default values for options and flags
+FORCE=false
+
+# Loop through the arguments
+while [[ "$1" != "" ]]; do
+    case $1 in
+        --force )
+            FORCE=true
+            ;;
+        --enable-repos )
+            shift # Move to the next argument, which should be the value for --option
+            if [[ -n $1 ]]; then
+                ENABLE_REPOS=$1
+            else
+                echo "Error: --enable-repos requires a value."
+                exit 1
+            fi
+            ;;
+        * )
+            echo "Invalid option: $1"
+            exit 1
+            ;;
+    esac
+    shift # Move to the next argument
+done
+
 # https://docs.oracle.com/cd/E93554_01/E69348/html/uek4-czc_xmc_xt.html
 touch /var/lib/rpm/*
 
@@ -46,7 +72,6 @@ RPM_BUILD_RPMS=$(rpm --eval '%{_rpmdir}')
 RPM_BUILD_SRPMS=$(rpm --eval '%{_srcrpmdir}')
 RPM_BUILD_SPECS=$(rpm --eval '%{_specdir}')
 
-echo $ RPM_BUILD_SPECS
 # copy any .spec filess to rpmbuild/SPECS directory
 find "${SOURCES}" -mindepth 1 -maxdepth 1 -name "*.spec" \
     -exec cp -R {} "${RPM_BUILD_SPECS}"/. \;
@@ -123,12 +148,13 @@ check_packages_in_repo() {
 # define function to build a single spec file
 build_spec() {
   local specFile=$1
-  if check_packages_in_repo "${specFile}"; then
-      echo "Skipping build for ${specFile} as all packages are present in the repository."
+  if [ "$FORCE" = true ]; then
+    echo "Building packages without checking repository because --force is set"
+  elif check_packages_in_repo "${specFile}"; then
+    echo "Skipping build for ${specFile} as all packages are present in the repository."
       return 0
   else
-      echo "Building packages as some are missing."
-      # Place build commands here
+    echo "Building packages as some are missing upon check with repository."
   fi
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # check the spec file for obvious errors using rpmlint
@@ -191,6 +217,11 @@ build_spec() {
 }
 
 total_modules=$(find "${RPM_BUILD_SPECS}" -name "*.spec" | wc -l)
+if [[ "$total_modules" -eq 0 ]]; then
+  echo "No spec files found. Exiting."
+  exit 1
+fi
+
 success_count=0
 fail_count=0
 failure_tolerance=0.1  # Example: Allow up to 10% of modules to fail
@@ -210,7 +241,7 @@ for specFile in "${RPM_BUILD_SPECS}"/*.spec; do
 
 done
 
-# fix uids
+# fix user IDs for output files
 if [ -n "${OUTPUT_UID}" ]; then
    chown -R "${OUTPUT_UID}:${OUTPUT_UID}" "${OUTPUT}"/*
 fi
