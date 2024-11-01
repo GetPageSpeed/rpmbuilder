@@ -71,7 +71,11 @@ case "${DISTRO}" in
         PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
         # glibc-langpack-en is required to stop rpmlint from erroring like this: E: specfile-error LANGUAGE = (unset),
-        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep python2 lua libarchive glibc-langpack-en bc"
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive glibc-langpack-en bc"
+        # If Fedora 40 or prior, we need to install python2
+        if [[ ${FEDORA} -le 40 ]]; then
+          PACKAGES="${PACKAGES} python2"
+        fi
         ;;
     opensuse)
         PKGR="dnf"
