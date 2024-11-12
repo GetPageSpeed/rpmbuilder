@@ -66,6 +66,20 @@
     },
     "collections": {
         "nginx": {
+            "custom_steps_after_checkout": [
+                {
+                    "run": {
+                        "name": "Set up RPM macro reflecting the NGINX branch",
+                        "command": "echo \"%nginx_branch ${CIRCLE_BRANCH}\" >> rpmmacros\n"
+                    }
+                },
+                {
+                    "run": {
+                        "name": "Set up %plesk macro if passed by a job",
+                        "command": "[ -z ${PLESK+x} ] || echo \"%plesk ${PLESK}\" >> rpmmacros\n# we generate both nginx-module-<foo> and sw-nginx-module-<foo> from a single spec file, so:\n[ -z ${PLESK+x} ] || (echo >> rpmlint.config && echo 'addFilter (\"E: invalid-spec-name\")' >> rpmlint.config)\n[ -z ${MOD+x} ] || echo \"%_nginx_mod ${MOD}\" >> rpmmacros\n[ -z ${MOD+x} ] || (echo >> rpmlint.config && echo 'addFilter (\"E: invalid-spec-name\")' >> rpmlint.config)\n"
+                    }
+                }
+            ],
             "branches": {
                 "stable": {
                     "description": "Stable",
