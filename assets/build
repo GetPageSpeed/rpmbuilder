@@ -52,7 +52,6 @@ touch /var/lib/rpm/*
 
 # enable specified repositories before build
 if [[ -n ${ENABLE_REPOS} ]]; then
-  RHEL=$(rpm -E '%{rhel}')
   # if more than 0 and less or equal than 7
   if [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then
     yum-config-manager --enable "${ENABLE_REPOS}"
