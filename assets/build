@@ -19,12 +19,18 @@ fi
 
 # Initialize default values for options and flags
 FORCE=false
+# Whether need to clean existing .spec files in rpm specs directory,
+# useful when running multiple build commands in a flow
+CLEAN=false
 
 # Loop through the arguments
 while [[ "$1" != "" ]]; do
     case $1 in
         --force )
             FORCE=true
+            ;;
+        --clean )
+            CLEAN=true
             ;;
         --enable-repos )
             shift # Move to the next argument, which should be the value for --option
@@ -76,6 +82,11 @@ RPM_BUILD_RPMS=$(rpm --eval '%{_rpmdir}')
 RPM_BUILD_SRPMS=$(rpm --eval '%{_srcrpmdir}')
 RPM_BUILD_SPECS=$(rpm --eval '%{_specdir}')
 
+if [ "$CLEAN" = true ]; then
+  # clean existing source and .spec files
+  rm -f "${RPM_BUILD_SPECS}"/*.spec
+  rm -f "${RPM_BUILD_SOURCES}"/*
+fi
 # copy any .spec filess to rpmbuild/SPECS directory
 find "${SOURCES}" -mindepth 1 -maxdepth 1 -name "*.spec" \
     -exec cp -R {} "${RPM_BUILD_SPECS}"/. \;
