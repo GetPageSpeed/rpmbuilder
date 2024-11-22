@@ -85,7 +85,7 @@ RPM_BUILD_SPECS=$(rpm --eval '%{_specdir}')
 if [ "$CLEAN" = true ]; then
   # clean existing source and .spec files
   rm -f "${RPM_BUILD_SPECS}"/*.spec
-  rm -f "${RPM_BUILD_SOURCES}"/*
+  rm -rf "${RPM_BUILD_SOURCES}"/*
 fi
 # copy any .spec filess to rpmbuild/SPECS directory
 find "${SOURCES}" -mindepth 1 -maxdepth 1 -name "*.spec" \
