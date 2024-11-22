@@ -240,7 +240,8 @@ for specFile in "${RPM_BUILD_SPECS}"/*.spec; do
     fail_count=$((fail_count + 1))
   fi
 
-  if [[ $(echo "scale=2; $fail_count / $total_modules" | bc) > $failure_tolerance ]]; then
+  fail_rate=$(echo "scale=2; $fail_count / $total_modules" | bc)
+  if (( $(echo "$fail_rate > $failure_tolerance" | bc -l) )); then
     echo "Built $success_count specs successfully, but $fail_count failed out of $total_modules total spec files."
     echo "Failure tolerance exceeded. Exiting build."
     exit 1
