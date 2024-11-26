@@ -96,6 +96,16 @@
                 },
                 "tengine": {
                     "description": "Tengine"
+                },
+                "plesk": {
+                    "description": "Plesk",
+                    "plesk_version": 18,
+                    "only_dists": [
+                        "el*"
+                    ],
+                    "only_archs": [
+                        "x86_64"
+                    ]
                 }
             }
         },
