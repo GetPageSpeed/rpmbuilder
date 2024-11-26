@@ -58,8 +58,9 @@ touch /var/lib/rpm/*
 
 # enable specified repositories before build
 if [[ -n ${ENABLE_REPOS} ]]; then
-  # if more than 0 and less or equal than 7
-  if [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then
+  if command -v dnf5 > /dev/null 2>&1; then
+    dnf5 config-manager setopt "${ENABLE_REPOS}".enabled=1
+  elif [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then  # if more than 0 and less or equal than 7
     yum-config-manager --enable "${ENABLE_REPOS}"
   else
     dnf config-manager --set-enabled "${ENABLE_REPOS}"
