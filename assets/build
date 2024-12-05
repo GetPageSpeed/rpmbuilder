@@ -68,7 +68,7 @@ if [[ -n ${ENABLE_REPOS} ]]; then
 fi
 
 # Use custom rpmlint config per repository, if such exists
-[ -f "${SOURCES}/rpmlint.config" ] && mv -f "${SOURCES}"/rpmlint.config /etc/rpmlint/custom.config
+[ -f "${SOURCES}/rpmlint.config" ] && cp -f "${SOURCES}"/rpmlint.config /etc/rpmlint/custom.config
 # Run optional per-repo file with extra build preparations needed like setting up more repos
 [ -f "${SOURCES}"/prepare.sh ] && bash "${SOURCES}"/prepare.sh
 
