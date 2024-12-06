@@ -82,11 +82,11 @@
             ],
             "branches": {
                 "stable": {
-                    "description": "Stable",
+                    "description": "Stable NGINX",
                     "git_branch": "master"
                 },
                 "mainline": {
-                    "description": "Mainline"
+                    "description": "Mainline NGINX"
                 },
                 "angie": {
                     "description": "Angie"
@@ -106,6 +106,12 @@
                     "only_archs": [
                         "x86_64"
                     ]
+                },
+                "freenginx-stable": {
+                    "description": "FreeNGINX Stable"
+                },
+                "freenginx-mainline": {
+                    "description": "FreeNGINX Mainline"
                 }
             }
         },
