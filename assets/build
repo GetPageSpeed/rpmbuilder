@@ -17,8 +17,9 @@ if [[ -f /usr/bin/dnf ]]; then
   fi
 fi
 
-# Initialize default values for options and flags
-FORCE=false
+# Initialize default values for options and flags, but attempt to use env var
+# if it is set
+FORCE="${FORCE:-false}"
 # Whether need to clean existing .spec files in rpm specs directory,
 # useful when running multiple build commands in a flow
 CLEAN=false
