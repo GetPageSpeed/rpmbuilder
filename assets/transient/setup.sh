@@ -7,6 +7,25 @@ elif test -f /usr/lib/os-release; then
    . /usr/lib/os-release
 fi
 
+# Retry function: tries a command multiple times
+retry() {
+    local -r max_attempts="$1"
+    shift
+    local -r cmd="$@"
+    local attempt=1
+    while (( attempt <= max_attempts )); do
+        echo "Attempt ${attempt} to run: ${cmd}"
+        if ${cmd}; then
+            return 0
+        fi
+        echo "Attempt ${attempt} failed. Waiting 5 seconds before retry..."
+        sleep 5
+        ((attempt++))
+    done
+    echo "All ${max_attempts} attempts failed for: ${cmd}"
+    return 1
+}
+
 RHEL=$(rpm -E "0%{?rhel}")
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
@@ -92,7 +111,7 @@ esac
 if test -n "${ID-}"; then
   if [ "$ID" = "opensuse-leap" ]; then
       echo "Do something Leap specific"
-      zypper --non-interactive install dnf libdnf-repo-config-zypp
+      retry 5 zypper --non-interactive install dnf libdnf-repo-config-zypp
       # this repo has None for type=
       rm -rf /etc/zypp/repos.d/repo-backports-debug-update.repo
   fi
@@ -119,21 +138,21 @@ fi
 
 if [[ $PKGR == "dnf" ]]; then
   # dnf-command(builddep)' and 'dnf-command(config-manager)'
-  $PKGR -y install dnf-plugins-core
+  retry 5 $PKGR -y install dnf-plugins-core
 fi
 
 # May be installed already
 ${PKGR} -y install ${PRIMARY_REPO_PACKAGES} || true
 # if SECONDARY_REPO_PACKAGES is set, install them
 if test -n "${SECONDARY_REPO_PACKAGES-}"; then
-  ${PKGR} -y install ${SECONDARY_REPO_PACKAGES}
+  retry 5 ${PKGR} -y install ${SECONDARY_REPO_PACKAGES}
 fi
 
 /tmp/fix-repos.sh
 
-${PKGR} -y install ${PRE_PACKAGES}
+retry 5 ${PKGR} -y install ${PRE_PACKAGES}
 
-${PKGR} -y install ${PACKAGES}
+retry 5 ${PKGR} -y install ${PACKAGES}
 
 ln -sf ${RPM_BUILD_DIR} /root/rpmbuild
 mkdir -p ${SOURCES} ${WORKSPACE} ${OUTPUT} ${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
@@ -144,8 +163,8 @@ mkdir -p ${SOURCES} ${WORKSPACE} ${OUTPUT} ${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,
 if ((RHEL > 0 && RHEL <= 7)); then
   patch /usr/bin/yum-builddep --forward /tmp/yum-builddep.patch
   # because we patched yum, versionlock ше:
-  yum -y install yum-plugin-versionlock
-  yum versionlock yum-utils
+  retry 5 yum -y install yum-plugin-versionlock
+  retry 5 yum versionlock yum-utils
 fi
 
 if (( RHEL == 8 )); then
