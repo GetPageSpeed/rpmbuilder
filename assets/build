@@ -59,6 +59,11 @@ touch /var/lib/rpm/*
 
 # enable specified repositories before build
 if [[ -n ${ENABLE_REPOS} ]]; then
+  # if ENABLE_REPOS is getpagespeed-extras-plesk, then drop a yum configuration for
+  # Plesk from https://www.getpagespeed.com/files/getpagespeed-extras-plesk.repo first
+  if [ "${ENABLE_REPOS}" = "getpagespeed-extras-plesk" ]; then
+    curl -o /etc/yum.repos.d/getpagespeed-extras-plesk.repo https://www.getpagespeed.com/files/getpagespeed-extras-plesk.repo
+  fi
   if command -v dnf5 > /dev/null 2>&1; then
     dnf5 config-manager setopt "${ENABLE_REPOS}".enabled=1
   elif [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then  # if more than 0 and less or equal than 7
