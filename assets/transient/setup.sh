@@ -11,18 +11,17 @@ fi
 retry() {
     local -r max_attempts="$1"
     shift
-    local -r cmd="$@"
     local attempt=1
     while (( attempt <= max_attempts )); do
-        echo "Attempt ${attempt} to run: ${cmd}"
-        if ${cmd}; then
+        echo "Attempt ${attempt} to run: $*"
+        if "$@"; then
             return 0
         fi
         echo "Attempt ${attempt} failed. Waiting 5 seconds before retry..."
         sleep 5
         ((attempt++))
     done
-    echo "All ${max_attempts} attempts failed for: ${cmd}"
+    echo "All ${max_attempts} attempts failed for: $*"
     return 1
 }
 
