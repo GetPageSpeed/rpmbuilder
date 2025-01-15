@@ -16,7 +16,8 @@
             "versions": [
                 7,
                 8,
-                9
+                9,
+                10
             ],
             "version_overrides": {
                 "7": {
