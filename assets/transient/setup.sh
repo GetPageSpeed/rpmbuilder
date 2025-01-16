@@ -53,8 +53,12 @@ case "${DISTRO}" in
           PRE_PACKAGES="dnf-plugins-core"
           PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive bc"
         else
-          # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
-          PRIMARY_REPO_PACKAGES="https://epel.cloud/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+          if [[ ${RELEASE_EPEL} -eq 10 ]]; then
+            PRIMARY_REPO_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+          else
+            # The PRE_ packages are typically release files, and need to be installed in a separate step to build ones
+            PRIMARY_REPO_PACKAGES="https://epel.cloud/pub/epel/epel-release-latest-${RELEASE_EPEL}.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
+          fi
           # in case either of URL-based RPMs are not available with a 404, rpm simply installs one that is available
           # thus we need to list them once again in the second step
           SECONDARY_REPO_PACKAGES="epel-release getpagespeed-extras-release";

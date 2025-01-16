@@ -12,8 +12,8 @@ function generate() {
 
     DISTRO=${1-fedora}
     RELEASE=${2-latest}
-    # Last EPEL is 9 so far:
-    RELEASE_EPEL=${2-9}
+    # Last EPEL is 10 so far:
+    RELEASE_EPEL=${2-10}
 
     if [[ "$DISTRO" == "amazonlinux" ]]; then
         case "$RELEASE" in
@@ -52,6 +52,10 @@ function generate() {
     fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 10 ]]; then
+      FROM_DISTRO="quay.io/centos/centos"
+      FROM_RELEASE_TAG="stream10-development"
+    fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
     cat > "${DOCKERFILE}" << EOF
 FROM ${FROM_DISTRO}:${FROM_RELEASE_TAG}
