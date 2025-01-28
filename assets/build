@@ -225,7 +225,22 @@ build_spec() {
   if [[ -z ${SRPM_ONLY} ]]; then
 
     # attempting to build RPM now
-    ${RPMBUILD_SETARCH} rpmbuild -ba "$specFile"
+    max_attempts=10
+    attempt=1
+    exit_status=0
+
+    while [ $attempt -le $max_attempts ]; do
+        echo "Build attempt $attempt of $max_attempts"
+        ${RPMBUILD_SETARCH} rpmbuild -ba "$specFile"
+        exit_status=$?
+
+        # Exit loop if the build succeeds or exits with a non-11 code
+        [ $exit_status -ne 11 ] && break
+
+        echo "Installing dynamic build dependencies and retrying..."
+        ${BUILDDEP_CMD} -y ${RPM_BUILD_SRPMS}/*.buildreqs.nosrc.rpm
+        attempt=$((attempt +1))
+    done
 
     if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
       # RPMs built successfully. Check using rpmlint
