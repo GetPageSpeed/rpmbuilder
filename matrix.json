@@ -23,6 +23,9 @@
                 "7": {
                     "docker": "centos",
                     "packager": "yum"
+                },
+                "10": {
+                    "has_plesk": false
                 }
             }
         },
