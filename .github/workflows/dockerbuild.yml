@@ -23,7 +23,6 @@ jobs:
       matrix: ${{ fromJson(needs.configure.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-      - uses: gautamkrishnar/keepalive-workflow@v2
       - name: "Set up RPM client User-Agent for images"
         run: |
           sed -i "s@XXXXXXXXXX@${{ secrets.RPMBUILDER_UA }}@g" assets/transient/fix-repos.sh
