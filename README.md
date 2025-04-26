@@ -14,7 +14,7 @@ Available versions can be located by visiting [Docker Hub Repository](https://hu
 
 ### Fetch image
 
-For example, to use RHEL-7-based image:
+For example, to use the RHEL-7-based image:
 
 ```bash
 BUILDER_VERSION=el7

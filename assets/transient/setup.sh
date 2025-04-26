@@ -157,8 +157,8 @@ retry 5 ${PKGR} -y install ${PRE_PACKAGES}
 
 retry 5 ${PKGR} -y install ${PACKAGES}
 
-ln -sf ${RPM_BUILD_DIR} /root/rpmbuild
-mkdir -p ${SOURCES} ${WORKSPACE} ${OUTPUT} ${RPM_BUILD_DIR}/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+ln -sf "${RPM_BUILD_DIR}" /root/rpmbuild
+mkdir -p "${SOURCES}" "${WORKSPACE}" "${OUTPUT}" "${RPM_BUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
 # Fix up things so that things work fine and do not break while building
 # Ensures required default repos as well

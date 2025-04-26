@@ -238,7 +238,7 @@ build_spec() {
         [ $exit_status -ne 11 ] && break
 
         echo "Installing dynamic build dependencies and retrying..."
-        ${BUILDDEP_CMD} -y ${RPM_BUILD_SRPMS}/*.buildreqs.nosrc.rpm
+        ${BUILDDEP_CMD} -y "${RPM_BUILD_SRPMS}"/*.buildreqs.nosrc.rpm
         attempt=$((attempt +1))
     done
 
