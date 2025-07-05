@@ -53,7 +53,7 @@ function generate() {
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 10 ]]; then
-      FROM_DISTRO="almalinux/almalinux"
+      FROM_DISTRO="almalinux"
       FROM_RELEASE_TAG="10"
     fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
