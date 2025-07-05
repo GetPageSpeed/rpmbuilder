@@ -14,10 +14,10 @@ Available versions can be located by visiting [Docker Hub Repository](https://hu
 
 ### Fetch image
 
-For example, to use the RHEL-7-based image:
+For example, to use the RHEL-9-based image:
 
 ```bash
-BUILDER_VERSION=el7
+BUILDER_VERSION=el9
 docker pull getpagespeed/rpmbuilder:${BUILDER_VERSION}
 ```
 
