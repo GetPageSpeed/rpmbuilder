@@ -34,17 +34,17 @@ jobs:
       - name: Log in to Docker Hub
         run: docker login -u="${{ secrets.DOCKER_USER }}" -p="${{ secrets.DOCKER_PASS }}"
 
-      - name: Build Docker Image with Retry
+      - name: Build And Push Docker Image with Retry
         run: |
-          MAX_ATTEMPTS=3
+          MAX_ATTEMPTS=10
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "Attempt $attempt of $MAX_ATTEMPTS: Building Docker image..."
             ./crypt-keeper.sh build ${{ matrix.os }} ${{ matrix.version }} && break
             EXIT_CODE=$?
             echo "Attempt $attempt failed with exit code $EXIT_CODE."
             if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
-              echo "Retrying in 15 seconds..."
-              sleep 15
+              echo "Retrying in 30 seconds..."
+              sleep 30
             else
               echo "All $MAX_ATTEMPTS attempts failed."
               exit $EXIT_CODE
