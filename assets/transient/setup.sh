@@ -133,7 +133,7 @@ if [[ $RHEL == 6 ]]; then
   curl https://www.getpagespeed.com/files/centos6-epel-eol.repo --output /etc/yum.repos.d/epel.repo
 fi
 
-if [[ $RHEL == 8 ]]; then
+if (( RHEL >= 8 )); then
   # mirrorlist service is very often 503. avoid it by direct use
   sed -i 's@^#baseurl@baseurl@g' /etc/yum.repos.d/Rocky-*.repo
   sed -i 's@^mirrorlist@#mirrorlist@g' /etc/yum.repos.d/Rocky-*.repo
