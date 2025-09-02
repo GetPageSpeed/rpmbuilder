@@ -10,7 +10,7 @@
             "rpmbuilder_name": "centos",
             "description": "CentOS/RHEL",
             "has_plesk": true,
-            "docker": "almalinux",
+            "docker": "rockylinux",
             "packager": "dnf",
             "versions_check": false,
             "versions": [
