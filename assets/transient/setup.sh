@@ -135,8 +135,24 @@ fi
 
 if (( RHEL >= 8 )); then
   # mirrorlist service is very often 503. avoid it by direct use
-  sed -i 's@^#baseurl@baseurl@g' /etc/yum.repos.d/Rocky-*.repo
-  sed -i 's@^mirrorlist@#mirrorlist@g' /etc/yum.repos.d/Rocky-*.repo
+  # Handle EL clones with their actual repo filenames and only if files exist
+  repo_globs=()
+  case "${ID-}" in
+    rocky)
+      repo_globs+=("/etc/yum.repos.d/[Rr]ocky*.repo")
+      ;;
+    almalinux)
+      repo_globs+=("/etc/yum.repos.d/[Aa]lma[Ll]inux*.repo")
+      ;;
+    centos|centos_stream|centos-stream)
+      repo_globs+=("/etc/yum.repos.d/[Cc]ent[Oo][Ss]*.repo")
+      ;;
+  esac
+  for glob in "${repo_globs[@]}"; do
+    if compgen -G "$glob" > /dev/null; then
+      sed -i -e 's@^#baseurl@baseurl@g' -e 's@^mirrorlist@#mirrorlist@g' $glob
+    fi
+  done
 fi
 
 if [[ $PKGR == "dnf" ]]; then
