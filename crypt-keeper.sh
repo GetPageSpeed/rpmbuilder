@@ -50,9 +50,9 @@ function generate() {
       FROM_DISTRO="getpagespeed/lts"
       FROM_RELEASE_TAG="el7"
     fi
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="almalinux"; fi
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="almalinux"; fi
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 10 ]]; then FROM_DISTRO="almalinux"; fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="almalinux/almalinux"; fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="almalinux/almalinux"; fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 10 ]]; then FROM_DISTRO="almalinux/almalinux"; fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
     cat > "${DOCKERFILE}" << EOF
 FROM ${FROM_DISTRO}:${FROM_RELEASE_TAG}
