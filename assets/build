@@ -9,6 +9,27 @@ command -v bc > /dev/null 2>&1 || { echo "bc is required but not installed. Abor
 SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 
+# If a GitHub token is provided, configure netrc/curl for private source access
+# Prefer GITHUB_TOKEN, then GITHUB_API_TOKEN, then LASTVERSION_GITHUB_API_TOKEN
+GH_TOK="${GITHUB_TOKEN:-${GITHUB_API_TOKEN:-${LASTVERSION_GITHUB_API_TOKEN}}}"
+if [ -n "${GH_TOK}" ]; then
+  # use restrictive umask only for writing secrets, then restore
+  __OLD_UMASK=$(umask)
+  umask 077
+  cat > /root/.netrc <<EOF
+machine github.com
+  login x-access-token
+  password ${GH_TOK}
+machine codeload.github.com
+  login x-access-token
+  password ${GH_TOK}
+EOF
+  echo "netrc = true" > /root/.curlrc
+  umask "${__OLD_UMASK}"
+  export GITHUB_API_TOKEN="${GITHUB_API_TOKEN:-${GH_TOK}}"
+  export GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOK}}"
+fi
+
 # The following is to support legacy prepare.sh scripts which call "yum" on "dnf" systems
 # Creates a symlink to dnf if yum is not present
 if [[ -f /usr/bin/dnf ]]; then
