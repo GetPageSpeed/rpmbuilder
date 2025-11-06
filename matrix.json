@@ -36,8 +36,8 @@
             "include_rolling_release": false,
             "rpmbuilder_name": "fedora",
             "versions": [
-                42,
-                41
+                43,
+                42
             ]
         },
         "amazonlinux": {
@@ -64,7 +64,7 @@
             "rpmbuilder_name": "opensuse",
             "dir": "sles",
             "versions": [
-                15
+                16
             ]
         }
     },

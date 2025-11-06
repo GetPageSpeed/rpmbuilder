@@ -18,11 +18,11 @@
         },
         {
             "os": "fedora",
-            "version": 42
+            "version": 43
         },
         {
             "os": "fedora",
-            "version": 41
+            "version": 42
         },
         {
             "os": "amazonlinux",
@@ -34,7 +34,7 @@
         },
         {
             "os": "opensuse",
-            "version": 15
+            "version": 16
         }
     ]
 }
