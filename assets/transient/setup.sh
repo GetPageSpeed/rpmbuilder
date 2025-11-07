@@ -105,7 +105,9 @@ case "${DISTRO}" in
         # Just a dummy pre-install to simplify RUN step below
         PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm"
         PRE_PACKAGES="dnf-plugins-core"
-        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua spectool bc"
+        # openSUSE provides spectool via rpmdevtools; do not request 'spectool' directly
+        # Lua meta-package name differs; not required for the build script, omit here
+        PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ rpm-config-SUSE which xz sed make bzip2 gzip gcc unzip diffutils cpio bash gawk rpm-build info patch util-linux findutils grep bc"
         ;;
 esac
 
@@ -114,7 +116,8 @@ esac
 if test -n "${ID-}"; then
   if [ "$ID" = "opensuse-leap" ]; then
       echo "Do something Leap specific"
-      retry 5 zypper --non-interactive install dnf libdnf-repo-config-zypp
+      # Ensure dnf and its plugins are present using zypper first; dnf may not be usable yet
+      retry 5 zypper --non-interactive install dnf dnf-plugins-core libdnf-repo-config-zypp
       # this repo has None for type=
       rm -rf /etc/zypp/repos.d/repo-backports-debug-update.repo
   fi
@@ -157,21 +160,30 @@ fi
 
 if [[ $PKGR == "dnf" ]]; then
   # dnf-command(builddep)' and 'dnf-command(config-manager)'
-  retry 5 $PKGR -y install dnf-plugins-core
+  # On openSUSE Leap, we install dnf-plugins-core via zypper above to avoid early dnf repo issues
+  if [ -z "${ID-}" ] || [ "$ID" != "opensuse-leap" ]; then
+    retry 5 $PKGR -y install dnf-plugins-core
+  fi
+fi
+
+# Choose installer for initial provisioning: prefer zypper on openSUSE
+INSTALLER="${PKGR} -y install"
+if test -n "${ID-}" && [ "$ID" = "opensuse-leap" ]; then
+  INSTALLER="zypper --non-interactive install"
 fi
 
 # May be installed already
-${PKGR} -y install ${PRIMARY_REPO_PACKAGES} || true
+${INSTALLER} ${PRIMARY_REPO_PACKAGES} || true
 # if SECONDARY_REPO_PACKAGES is set, install them
 if test -n "${SECONDARY_REPO_PACKAGES-}"; then
-  retry 5 ${PKGR} -y install ${SECONDARY_REPO_PACKAGES}
+  retry 5 ${INSTALLER} ${SECONDARY_REPO_PACKAGES}
 fi
 
 /tmp/fix-repos.sh
 
-retry 5 ${PKGR} -y install ${PRE_PACKAGES}
+retry 5 ${INSTALLER} ${PRE_PACKAGES}
 
-retry 5 ${PKGR} -y install ${PACKAGES}
+retry 5 ${INSTALLER} ${PACKAGES}
 
 ln -sf "${RPM_BUILD_DIR}" /root/rpmbuild
 mkdir -p "${SOURCES}" "${WORKSPACE}" "${OUTPUT}" "${RPM_BUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}

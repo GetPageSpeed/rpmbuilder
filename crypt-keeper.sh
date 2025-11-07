@@ -54,6 +54,28 @@ function generate() {
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 10 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
+    # Resolve FROM tag for cases like opensuse/leap:16 where Docker Hub only publishes 16.0
+    # Try the requested tag first; if missing, attempt tag with ".0"
+    resolve_from_tag() {
+      local img="$1" tag="$2" alt
+      if ! docker manifest inspect "${img}:${tag}" >/dev/null 2>&1; then
+        alt="${tag}.0"
+        if docker manifest inspect "${img}:${alt}" >/dev/null 2>&1; then
+          echo -n "${alt}"
+          return 0
+        fi
+      fi
+      echo -n "${tag}"
+    }
+    # If the tag is a bare major number (e.g. 16), attempt fallback to X.0 when needed
+    if [[ "${FROM_RELEASE_TAG}" =~ ^[0-9]+$ ]]; then
+      FROM_RELEASE_TAG="$(resolve_from_tag "${FROM_DISTRO}" "${FROM_RELEASE_TAG}")"
+    fi
+    # Choose cache refresh command: use zypper on openSUSE, dnf/yum elsewhere
+    CACHE_REFRESH_CMD="/usr/bin/pkgr -y clean all && rm -rf /tmp/* && rm -rf /var/cache/* && /usr/bin/pkgr --disablerepo \"getpagespeed*\" makecache"
+    if [[ "${DISTRO}" = "opensuse" ]]; then
+      CACHE_REFRESH_CMD="zypper --non-interactive clean -a && rm -rf /tmp/* && rm -rf /var/cache/* && zypper --non-interactive refresh"
+    fi
     cat > "${DOCKERFILE}" << EOF
 FROM ${FROM_DISTRO}:${FROM_RELEASE_TAG}
 LABEL maintainer="Danila Vershinin <info@getpagespeed.com>"
@@ -73,7 +95,7 @@ RUN DISTRO=${DISTRO} RELEASE=${RELEASE} RELEASE_EPEL=${RELEASE_EPEL} /tmp/setup.
 # but we still need to ensure that no metadata is cached for the GetPageSpeed repos to properly detect
 # dependencies and whether packages need to be built at all
 # Also this runs in a separate step to ensure that the base image goes into its own layer
-RUN /usr/bin/pkgr -y clean all && rm -rf /tmp/* && rm -rf /var/cache/* && /usr/bin/pkgr --disablerepo "getpagespeed*" makecache
+RUN ${CACHE_REFRESH_CMD}
 
 VOLUME ["\${SOURCES}", "\${OUTPUT}"]
 
