@@ -130,6 +130,11 @@ chown root:root /root/rpmbuild
 # varnishd is dropping to user nobody/varnish, and as such doesn't have access in /root/
 chmod 0755 /root
 
+# Detect OS for distro-specific dependency installation logic
+if [[ -f /etc/os-release ]]; then
+  . /etc/os-release
+fi
+
 # With SCLO repos in place, yum-builddep might resolve "BuildRequires: gcc" to devtoolset-4-gcc
 # In Docker image we pre-install build sys root (gcc) to mimic mock better and avoid this bad lookup
 BUILDDEP_CMD="yum-builddep"
@@ -140,6 +145,24 @@ if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
   RPMBUILD_SETARCH="setarch ${SETARCH}"
   echo x86_64 > /etc/yum/vars/basearch
 fi
+
+# Install build dependencies using zypper on openSUSE (dnf builddep is unreliable there)
+zypper_builddep() {
+  local spec_file=$1
+  # Ensure metadata is fresh and keys are imported
+  zypper --non-interactive --gpg-auto-import-keys refresh || true
+  # Extract BuildRequires and install them
+  local reqs
+  if ! reqs=$(rpmspec -q --buildrequires "$spec_file"); then
+    echo "Failed to parse buildrequires from ${spec_file}"
+    return 1
+  fi
+  # Use no-recommends to keep image lean; force-resolution to satisfy pkgconfig() virtuals
+  if ! zypper --non-interactive install --no-recommends --force-resolution ${reqs}; then
+    echo "zypper failed to install some build dependencies for ${spec_file}"
+    return 1
+  fi
+}
 
 # Universal wrapper function for repoquery across different RHEL/CentOS versions
 universal_repoquery() {
@@ -208,23 +231,46 @@ build_spec() {
   fi
 
   # install build requires
-  if ! ${BUILDDEP_CMD} -y "$specFile"; then
-    pkgr clean all
-    if ! ${BUILDDEP_CMD} -y "$specFile"; then
+  if [[ "${ID-}" = "opensuse-leap" ]]; then
+    if ! zypper_builddep "$specFile"; then
       echo "Failed to install build dependencies for $specFile"
       return 1
+    fi
+  else
+    if ! ${BUILDDEP_CMD} -y "$specFile"; then
+      pkgr clean all
+      if ! ${BUILDDEP_CMD} -y "$specFile"; then
+        echo "Failed to install build dependencies for $specFile"
+        return 1
+      fi
     fi
   fi
 
   # repeat step for chosen arch
   if [[ -n ${SETARCH} && "${SETARCH}" != "x86_64" ]]; then
-    if ! ${RPMBUILD_SETARCH} "${BUILDDEP_CMD}" -y "$specFile"; then
-      pkgr clean all
-      ${RPMBUILD_SETARCH} "${BUILDDEP_CMD}" -y "$specFile"
+    if [[ "${ID-}" = "opensuse-leap" ]]; then
+      # Re-run zypper build deps for secondary arch context if requested
+      zypper_builddep "$specFile" || true
+    else
+      if ! ${RPMBUILD_SETARCH} "${BUILDDEP_CMD}" -y "$specFile"; then
+        pkgr clean all
+        ${RPMBUILD_SETARCH} "${BUILDDEP_CMD}" -y "$specFile"
+      fi
     fi
   fi
 
-  spectool --sourcedir --get-files "$specFile"
+  # Fetch sources referenced by the spec. Prefer 'spectool'; on openSUSE it is named 'rpmdev-spectool'.
+  SPECTOOL_CMD=""
+  if command -v spectool > /dev/null 2>&1; then
+    SPECTOOL_CMD="spectool"
+  elif command -v rpmdev-spectool > /dev/null 2>&1; then
+    SPECTOOL_CMD="rpmdev-spectool"
+  fi
+  if [[ -n ${SPECTOOL_CMD} ]]; then
+    ${SPECTOOL_CMD} --sourcedir --get-files "$specFile"
+  else
+    echo "No spectool available to download sources; skipping source fetch."
+  fi
 
   # build source RPM, also allows to fail quicker
   rpmbuild -bs "$specFile"
