@@ -1,5 +1,7 @@
 # `rpmbuild` containers for RedHat-based various distros
 
+> End‑to‑end flow documentation: `builder-scripts/docs/system-overview.md`
+
 [![CI](https://github.com/GetPageSpeed/rpmbuilder/actions/workflows/dockerbuild.yml/badge.svg)](https://github.com/GetPageSpeed/rpmbuilder/actions/workflows/dockerbuild.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/getpagespeed/rpmbuilder.svg)](https://hub.docker.com/r/getpagespeed/rpmbuilder/)
 
 This is different from upstream because:
