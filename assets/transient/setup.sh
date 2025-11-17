@@ -120,6 +120,8 @@ if test -n "${ID-}"; then
       retry 5 zypper --non-interactive install dnf dnf-plugins-core libdnf-repo-config-zypp
       # this repo has None for type=
       rm -rf /etc/zypp/repos.d/repo-backports-debug-update.repo
+      # Import GetPageSpeed GPG key early to allow signature verification of release RPM
+      rpm --import https://extras.getpagespeed.com/RPM-GPG-KEY-GETPAGESPEED || true
   fi
 fi
 
@@ -172,8 +174,8 @@ if test -n "${ID-}" && [ "$ID" = "opensuse-leap" ]; then
   INSTALLER="zypper --non-interactive install"
 fi
 
-# May be installed already
-${INSTALLER} ${PRIMARY_REPO_PACKAGES} || true
+# May be installed already; make best-effort with retries to reduce flakiness during image build
+retry 5 ${INSTALLER} ${PRIMARY_REPO_PACKAGES} || true
 # if SECONDARY_REPO_PACKAGES is set, install them
 if test -n "${SECONDARY_REPO_PACKAGES-}"; then
   retry 5 ${INSTALLER} ${SECONDARY_REPO_PACKAGES}
