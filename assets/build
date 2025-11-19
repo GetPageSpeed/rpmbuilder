@@ -157,6 +157,11 @@ zypper_builddep() {
     echo "Failed to parse buildrequires from ${spec_file}"
     return 1
   fi
+  # If there are no BuildRequires, nothing to install – treat as success
+  if [[ -z "${reqs}" ]]; then
+    echo "No BuildRequires found in ${spec_file}; skipping zypper install."
+    return 0
+  fi
   # Use no-recommends to keep image lean; force-resolution to satisfy pkgconfig() virtuals
   if ! zypper --non-interactive install --no-recommends --force-resolution ${reqs}; then
     echo "zypper failed to install some build dependencies for ${spec_file}"
