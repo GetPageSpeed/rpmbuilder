@@ -52,7 +52,9 @@ function generate() {
     fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 10 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
+    # rockylinux 2025-11-26: dnf fails with "ImportError: /lib64/librpm_sequoia.so.1: undefined symbol: EVP_PKEY_verify_message_init, version OPENSSL_3.4.0"
+    # so trying almalinux
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 10 ]]; then FROM_DISTRO="almalinux"; fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
     # Resolve FROM tag for cases like opensuse/leap:16 where Docker Hub only publishes 16.0
     # Try the requested tag first; if missing, attempt tag with ".0"
