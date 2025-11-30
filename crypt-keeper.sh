@@ -9,6 +9,7 @@ function generate() {
     OUTPUT=${OUTPUT-/output}
     WORKSPACE=${WORKSPACE-/workspace}
     RPM_BUILD_DIR=${RPM_BUILD_DIR-/rpmbuild}
+    OUT_DIR=${OUT_DIR-$(pwd)/out}
 
     DISTRO=${1-fedora}
     RELEASE=${2-latest}
@@ -29,7 +30,7 @@ function generate() {
         esac
     fi
 
-    ROOT=$(pwd)/${DISTRO}/${RELEASE}/
+    ROOT=${OUT_DIR}/${DISTRO}/${RELEASE}/
     # shellcheck disable=SC2034
     ASSETS=${ROOT}/assets
     DOCKERFILE=${ROOT}/Dockerfile
@@ -127,11 +128,12 @@ function docker-image-alt-name() {
 function build() {
     DISTRO=${1}
     VERSION=${2}
+    OUT_DIR=${OUT_DIR-$(pwd)/out}
     MAIN_TAG="$(docker-image-name "${DISTRO}" "${VERSION}")"
     ALT_TAG="$(docker-image-alt-name "${DISTRO}" "${VERSION}")"
     # Ensure buildx is set up and ready for multi-architecture builds
     docker buildx create --use --name multiarch-builder --driver docker-container || true
-    cd "${DISTRO}/${VERSION}" && docker buildx build --platform linux/amd64,linux/arm64 --push -t "${MAIN_TAG}" -t "${ALT_TAG}" .
+    cd "${OUT_DIR}/${DISTRO}/${VERSION}" && docker buildx build --platform linux/amd64,linux/arm64 --push -t "${MAIN_TAG}" -t "${ALT_TAG}" .
     cd -
 }
 
