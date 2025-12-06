@@ -190,6 +190,46 @@ universal_repoquery() {
 check_packages_in_repo() {
     local spec_file=$1
 
+    # Special handling for openSUSE/SLES builder images where zypper has full
+    # visibility into SLES repos and dnf repoquery does not.
+    if [[ "${ID-}" = "opensuse-leap" ]] && command -v zypper > /dev/null 2>&1; then
+        local lines
+        if ! lines=$(rpmspec -q --qf '%{NAME}|%{EPOCH}|%{VERSION}|%{RELEASE}\n' "${spec_file}" 2>/dev/null); then
+            echo "Failed to parse spec file ${spec_file}"
+            return 1
+        fi
+
+        while IFS='|' read -r name epoch version release; do
+            # Skip empty lines (can happen at EOF)
+            [[ -z "$name" ]] && continue
+
+            # Normalise epoch; ignore (none)
+            local evr
+            if [[ -z "$epoch" || "$epoch" == "(none)" ]]; then
+                evr="${version}-${release}"
+            else
+                evr="${epoch}:${version}-${release}"
+            fi
+
+            # Use zypper search without refreshing metadata; match exact name and VERSION-RELEASE.
+            # Example row:
+            #   | firewalld-ipset-braintree | package | 20250809-1.sles16 | noarch | GetPageSpeed ...
+            local match
+            match=$(zypper --non-interactive --no-refresh search -s -x "$name" 2>/dev/null | \
+                awk -v want_name="$name" -v want_evr="$evr" '
+                    $2 == want_name && $6 == want_evr { print $0 }
+                ')
+            if [[ -z "$match" ]]; then
+                echo "Package ${name}-${evr} is NOT present in the repository."
+                return 1
+            fi
+        done <<< "$lines"
+
+        echo "All packages from ${spec_file} are present in the repository."
+        return 0
+    fi
+
+    # Default behaviour for non-SLES: use repoquery via the universal wrapper
     # Generate the list of packages from the .spec file
     local packages
     if ! packages=$(rpmspec -q --qf '%{NAME}-%{EPOCH}:%{VERSION}-%{RELEASE}.*\n' "${spec_file}" | sed 's/(none)://g'); then
