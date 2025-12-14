@@ -141,12 +141,9 @@ fi
 if (( RHEL >= 8 )); then
   # mirrorlist service is very often 503. avoid it by direct use
   # Handle EL clones with their actual repo filenames and only if files exist
-  # Trust the almalinux mirrorlist to work fine, so not including it in the repo_globs
+  # AlmaLinux mirrorlist works reliably, so no special handling needed for it
   repo_globs=()
   case "${ID-}" in
-    rocky)
-      repo_globs+=("/etc/yum.repos.d/[Rr]ocky*.repo")
-      ;;
     centos|centos_stream|centos-stream)
       repo_globs+=("/etc/yum.repos.d/[Cc]ent[Oo][Ss]*.repo")
       ;;

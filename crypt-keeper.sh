@@ -43,18 +43,21 @@ function generate() {
     # header
     FROM_DISTRO="${DISTRO}"
     FROM_RELEASE_TAG="${RELEASE}"
-    # Rocky Linux vs Oracle Linux. The selinux-policy in Oracle Linux has "bad" release
-    # Instead of 3.14.3-67.el8, it is  3.14.3-67.0.1.el8
-    # This makes %_selinux_policy_version usage cause issues with -selinux packages
-    # Rocky Linux is closer to upstream in these regards and no issues, so we use it.
+    # EL7: use custom LTS image since CentOS 7 is EOL
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 7 ]]; then
       FROM_DISTRO="getpagespeed/lts"
       FROM_RELEASE_TAG="el7"
     fi
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
-    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="rockylinux/rockylinux"; fi
-    # rockylinux 2025-11-26: dnf fails with "ImportError: /lib64/librpm_sequoia.so.1: undefined symbol: EVP_PKEY_verify_message_init, version OPENSSL_3.4.0"
-    # so trying almalinux
+    # Historical note on EL clone selection:
+    # - Oracle Linux has "bad" selinux-policy release versioning (e.g. 3.14.3-67.0.1.el8
+    #   instead of 3.14.3-67.el8), which breaks %_selinux_policy_version in -selinux packages
+    # - Rocky Linux was chosen initially as it's closer to upstream RHEL
+    # - However, Rocky Linux Docker Hub infrastructure proved unreliable (timeouts,
+    #   manifest errors, 503s from mirrorlist), so we switched to AlmaLinux for EL8+
+    # - Rocky Linux EL10 (2025-11-26) also had: "ImportError: /lib64/librpm_sequoia.so.1:
+    #   undefined symbol: EVP_PKEY_verify_message_init, version OPENSSL_3.4.0"
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 8 ]]; then FROM_DISTRO="almalinux"; fi
+    if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 9 ]]; then FROM_DISTRO="almalinux"; fi
     if [[ "${DISTRO}" = "centos" ]] && [[ "$RELEASE" -eq 10 ]]; then FROM_DISTRO="almalinux"; fi
     if [[ "${DISTRO}" = "opensuse" ]]; then FROM_DISTRO="opensuse/leap"; fi
     # Resolve FROM tag for cases like opensuse/leap:16 where Docker Hub only publishes 16.0
