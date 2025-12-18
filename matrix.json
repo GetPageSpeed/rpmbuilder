@@ -115,7 +115,9 @@
                     "description": "CloudLinux EA4",
                     "git_branch": "cl-ea4",
                     "only_dists": [
-                        "el*"
+                        "el7",
+                        "el8",
+                        "el9"
                     ],
                     "only_archs": [
                         "x86_64"
