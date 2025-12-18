@@ -111,6 +111,22 @@
                         "x86_64"
                     ]
                 },
+                "cl-ea4": {
+                    "description": "CloudLinux EA4",
+                    "git_branch": "cl-ea4",
+                    "only_dists": [
+                        "el*"
+                    ],
+                    "only_archs": [
+                        "x86_64"
+                    ],
+                    "extra_repos": [
+                        {
+                            "name": "cloudlinux-ea4",
+                            "baseurl": "https://repo.cloudlinux.com/cloudlinux/EA4/${os_version}/updates/$basearch/"
+                        }
+                    ]
+                },
                 "freenginx-stable": {
                     "description": "FreeNGINX Stable"
                 },

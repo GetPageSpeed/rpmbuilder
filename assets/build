@@ -85,6 +85,26 @@ if [[ -n ${ENABLE_REPOS} ]]; then
   if [ "${ENABLE_REPOS}" = "getpagespeed-extras-plesk" ]; then
     curl -o /etc/yum.repos.d/getpagespeed-extras-plesk.repo https://www.getpagespeed.com/files/getpagespeed-extras-plesk.repo
   fi
+  # CloudLinux EA4 repo for building ea-nginx modules
+  if [ "${ENABLE_REPOS}" = "cloudlinux-ea4" ]; then
+    cat > /etc/yum.repos.d/cloudlinux-ea4.repo <<EOF
+[cloudlinux-ea4]
+name=CloudLinux EA4 for EL${RHEL}
+baseurl=https://repo.cloudlinux.com/cloudlinux/EA4/${RHEL}/updates/\$basearch/
+gpgcheck=0
+enabled=1
+EOF
+    # Install ea-nginx-ngxdev without its runtime deps (ea-nginx requires full cPanel stack)
+    # We only need the build files in /opt/cpanel/ea-nginx-ngxdev/, not the runtime deps
+    mkdir -p /tmp/ea-ngxdev-download
+    if command -v dnf > /dev/null 2>&1; then
+      dnf download --destdir=/tmp/ea-ngxdev-download ea-nginx-ngxdev
+    else
+      yumdownloader --destdir=/tmp/ea-ngxdev-download ea-nginx-ngxdev
+    fi
+    rpm -ivh --nodeps /tmp/ea-ngxdev-download/ea-nginx-ngxdev*.rpm
+    echo "Installed ea-nginx-ngxdev (--nodeps) to /opt/cpanel/ea-nginx-ngxdev"
+  fi
   if command -v dnf5 > /dev/null 2>&1; then
     dnf5 config-manager setopt "${ENABLE_REPOS}".enabled=1
   elif [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then  # if more than 0 and less or equal than 7
