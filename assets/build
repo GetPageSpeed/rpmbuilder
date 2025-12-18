@@ -87,10 +87,12 @@ if [[ -n ${ENABLE_REPOS} ]]; then
   fi
   # CloudLinux EA4 repo for building ea-nginx modules
   if [ "${ENABLE_REPOS}" = "cloudlinux-ea4" ]; then
+    # Strip leading zeros from RHEL version (e.g., "09" -> "9", "010" -> "10")
+    CL_VER=$((10#${RHEL}))
     cat > /etc/yum.repos.d/cloudlinux-ea4.repo <<EOF
 [cloudlinux-ea4]
-name=CloudLinux EA4 for EL${RHEL}
-baseurl=https://repo.cloudlinux.com/cloudlinux/EA4/${RHEL}/updates/\$basearch/
+name=CloudLinux EA4 for EL${CL_VER}
+baseurl=https://repo.cloudlinux.com/cloudlinux/EA4/${CL_VER}/updates/\$basearch/
 gpgcheck=0
 enabled=1
 EOF
