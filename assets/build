@@ -392,8 +392,9 @@ build_spec() {
 
 total_modules=$(find "${RPM_BUILD_SPECS}" -name "*.spec" | wc -l)
 if [[ "$total_modules" -eq 0 ]]; then
-  echo "No spec files found. Exiting."
-  exit 1
+  echo "No spec files found. Nothing to build."
+  # Exit successfully - this is expected for infrastructure-only commits
+  exit 0
 fi
 
 success_count=0
