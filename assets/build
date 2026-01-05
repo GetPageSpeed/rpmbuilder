@@ -106,13 +106,14 @@ EOF
     fi
     rpm -ivh --nodeps /tmp/ea-ngxdev-download/ea-nginx-ngxdev*.rpm
     echo "Installed ea-nginx-ngxdev (--nodeps) to /opt/cpanel/ea-nginx-ngxdev"
-    # Also enable getpagespeed-extras-cl-ea4 for repoquery checks of already-built packages
+    # Enable getpagespeed-extras-cl-ea4 repo for repoquery checks of already-built packages
+    # The repo definition comes from getpagespeed-extras-release package (installed in Docker image)
     if command -v dnf5 > /dev/null 2>&1; then
       dnf5 config-manager setopt getpagespeed-extras-cl-ea4.enabled=1
-    elif [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then
-      yum-config-manager --enable getpagespeed-extras-cl-ea4
-    else
+    elif command -v dnf > /dev/null 2>&1; then
       dnf config-manager --set-enabled getpagespeed-extras-cl-ea4
+    else
+      yum-config-manager --enable getpagespeed-extras-cl-ea4
     fi
   fi
   if command -v dnf5 > /dev/null 2>&1; then
