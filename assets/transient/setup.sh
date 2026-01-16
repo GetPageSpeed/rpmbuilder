@@ -7,6 +7,12 @@ elif test -f /usr/lib/os-release; then
    . /usr/lib/os-release
 fi
 
+# echo GitHub runner's IP for debugging repo access issues
+if command -v curl >/dev/null 2>&1; then
+  echo "GitHub runner public IP address:"
+  curl -s https://ifconfig.me/ip || true
+fi
+
 # Retry function: tries a command multiple times
 retry() {
     local -r max_attempts="$1"
