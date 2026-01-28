@@ -24,7 +24,7 @@ machine codeload.github.com
   login x-access-token
   password ${GH_TOK}
 EOF
-  echo "netrc = true" > /root/.curlrc
+  echo "--netrc" > /root/.curlrc
   umask "${__OLD_UMASK}"
   export GITHUB_API_TOKEN="${GITHUB_API_TOKEN:-${GH_TOK}}"
   export GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOK}}"
