@@ -49,6 +49,18 @@ if ((RHEL > 0 && RHEL <= 7)); then
   yum versionlock yum yum-utils
 fi
 
+# Fix EPEL 8 repo: epel.cloud's EPEL 8 repomd.xml returns 404.
+# Switch from broken baseurl to official Fedora metalink.
+if ((RHEL == 8)); then
+  if test -f /etc/yum.repos.d/epel.repo; then
+    echo "Fixing EPEL 8 repo: switching from epel.cloud to Fedora metalink"
+    # Comment out broken baseurl lines
+    sed -i 's@^baseurl=https://epel\.cloud/@#baseurl=https://epel.cloud/@' /etc/yum.repos.d/epel.repo
+    # Uncomment metalink lines
+    sed -i 's@^#metalink=https://mirrors\.fedoraproject\.org/@metalink=https://mirrors.fedoraproject.org/@' /etc/yum.repos.d/epel.repo
+  fi
+fi
+
 # for any DNF client, copy in custom user-agent plugin for DNF
 # and overwrite our plugin in the process
 DNF_PLUGINS_DIR="/usr/lib/python*/site-packages/dnf-plugins"
