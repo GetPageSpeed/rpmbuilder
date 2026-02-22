@@ -111,9 +111,9 @@
                         "x86_64"
                     ]
                 },
-                "cl-ea4": {
-                    "description": "CloudLinux EA4",
-                    "git_branch": "cl-ea4",
+                "ea4": {
+                    "description": "EA4",
+                    "git_branch": "ea4",
                     "only_dists": [
                         "el7",
                         "el8",
