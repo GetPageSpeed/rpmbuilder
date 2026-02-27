@@ -80,10 +80,10 @@ touch /var/lib/rpm/*
 
 # enable specified repositories before build
 if [[ -n ${ENABLE_REPOS} ]]; then
-  # if ENABLE_REPOS is getpagespeed-extras-plesk, then drop a yum configuration for
-  # Plesk from https://www.getpagespeed.com/files/getpagespeed-extras-plesk.repo first
-  if [ "${ENABLE_REPOS}" = "getpagespeed-extras-plesk" ]; then
-    curl -o /etc/yum.repos.d/getpagespeed-extras-plesk.repo https://www.getpagespeed.com/files/getpagespeed-extras-plesk.repo
+  # Install repo definition if shipped by getpagespeed-extras-release but not yet in yum.repos.d
+  REPO_FILE="/usr/share/getpagespeed/${ENABLE_REPOS}.repo"
+  if [ -f "${REPO_FILE}" ] && [ ! -f "/etc/yum.repos.d/${ENABLE_REPOS}.repo" ]; then
+    cp "${REPO_FILE}" /etc/yum.repos.d/
   fi
   if command -v dnf5 > /dev/null 2>&1; then
     dnf5 config-manager setopt "${ENABLE_REPOS}".enabled=1
