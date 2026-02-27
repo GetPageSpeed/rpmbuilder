@@ -85,19 +85,9 @@ if [[ -n ${ENABLE_REPOS} ]]; then
   if [ "${ENABLE_REPOS}" = "getpagespeed-extras-plesk" ]; then
     curl -o /etc/yum.repos.d/getpagespeed-extras-plesk.repo https://www.getpagespeed.com/files/getpagespeed-extras-plesk.repo
   fi
-  # CloudLinux EA4 repo for building ea-nginx modules
-  if [ "${ENABLE_REPOS}" = "cloudlinux-ea4" ]; then
-    # Strip leading zeros from RHEL version (e.g., "09" -> "9", "010" -> "10")
-    CL_VER=$((10#${RHEL}))
-    cat > /etc/yum.repos.d/cloudlinux-ea4.repo <<EOF
-[cloudlinux-ea4]
-name=CloudLinux EA4 for EL${CL_VER}
-baseurl=https://repo.cloudlinux.com/cloudlinux/EA4/${CL_VER}/updates/\$basearch/
-gpgcheck=0
-enabled=1
-EOF
-    # Install ea-nginx-ngxdev without its runtime deps (ea-nginx requires full cPanel stack)
-    # We only need the build files in /opt/cpanel/ea-nginx-ngxdev/, not the runtime deps
+  # EA4: install ea-nginx-ngxdev without runtime deps (ea-nginx requires full cPanel stack)
+  # ea-nginx and ea-nginx-ngxdev are in the getpagespeed-extras-ea4 repo
+  if [ "${ENABLE_REPOS}" = "getpagespeed-extras-ea4" ]; then
     mkdir -p /tmp/ea-ngxdev-download
     if command -v dnf > /dev/null 2>&1; then
       dnf download --destdir=/tmp/ea-ngxdev-download ea-nginx-ngxdev
@@ -106,15 +96,6 @@ EOF
     fi
     rpm -ivh --nodeps /tmp/ea-ngxdev-download/ea-nginx-ngxdev*.rpm
     echo "Installed ea-nginx-ngxdev (--nodeps) to /opt/cpanel/ea-nginx-ngxdev"
-    # Enable getpagespeed-extras-cl-ea4 repo for repoquery checks of already-built packages
-    # The repo definition comes from getpagespeed-extras-release package (installed in Docker image)
-    if command -v dnf5 > /dev/null 2>&1; then
-      dnf5 config-manager setopt getpagespeed-extras-cl-ea4.enabled=1
-    elif command -v dnf > /dev/null 2>&1; then
-      dnf config-manager --set-enabled getpagespeed-extras-cl-ea4
-    else
-      yum-config-manager --enable getpagespeed-extras-cl-ea4
-    fi
   fi
   if command -v dnf5 > /dev/null 2>&1; then
     dnf5 config-manager setopt "${ENABLE_REPOS}".enabled=1
