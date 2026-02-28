@@ -115,18 +115,11 @@
                     "description": "EA4",
                     "git_branch": "ea4",
                     "only_dists": [
-                        "el7",
                         "el8",
                         "el9"
                     ],
                     "only_archs": [
                         "x86_64"
-                    ],
-                    "extra_repos": [
-                        {
-                            "name": "cloudlinux-ea4",
-                            "baseurl": "https://repo.cloudlinux.com/cloudlinux/EA4/${os_version}/updates/$basearch/"
-                        }
                     ]
                 },
                 "freenginx-stable": {
