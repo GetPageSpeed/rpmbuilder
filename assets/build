@@ -380,21 +380,56 @@ fail_count=0
 # Allow configurable failure tolerance via env var (default 10%)
 failure_tolerance=${FAILURE_TOLERANCE:-0.1}
 
+# JUnit XML reporting for CircleCI "Tests" tab
+RESULTS_DIR="/output/test-results"
+mkdir -p "${RESULTS_DIR}"
+declare -a junit_entries=()
+
 for specFile in "${RPM_BUILD_SPECS}"/*.spec; do
-  if build_spec "${specFile}"; then
+  spec_name=$(basename "$specFile" .spec)
+  start_time=$(date +%s)
+
+  build_output=$(build_spec "${specFile}" 2>&1) && build_exit=0 || build_exit=$?
+
+  end_time=$(date +%s)
+  duration=$((end_time - start_time))
+
+  # Still print output to stdout
+  echo "$build_output"
+
+  if [ $build_exit -eq 0 ]; then
     success_count=$((success_count + 1))
+    junit_entries+=("<testcase classname=\"rpm-build\" name=\"${spec_name}\" time=\"${duration}\"/>")
   else
     fail_count=$((fail_count + 1))
+    # Escape XML special chars in output, keep last 50 lines
+    escaped_output=$(echo "$build_output" | tail -50 | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+    junit_entries+=("<testcase classname=\"rpm-build\" name=\"${spec_name}\" time=\"${duration}\"><failure message=\"Build failed\">${escaped_output}</failure></testcase>")
   fi
 
   fail_rate=$(echo "scale=2; $fail_count / $total_modules" | bc)
   if (( $(echo "$fail_rate > $failure_tolerance" | bc -l) )); then
     echo "Built $success_count specs successfully, but $fail_count failed out of $total_modules total spec files."
     echo "Failure tolerance exceeded. Exiting build."
+    # Write partial JUnit report before exiting
+    cat > "${RESULTS_DIR}/build-results.xml" <<PARTIAL_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="rpm-build" tests="$((success_count + fail_count))" failures="${fail_count}">
+$(printf '%s\n' "${junit_entries[@]}")
+</testsuite>
+PARTIAL_EOF
     exit 1
   fi
 
 done
+
+# Write JUnit XML report
+cat > "${RESULTS_DIR}/build-results.xml" <<JUNIT_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="rpm-build" tests="$((success_count + fail_count))" failures="${fail_count}">
+$(printf '%s\n' "${junit_entries[@]}")
+</testsuite>
+JUNIT_EOF
 
 # fix user IDs for output files
 if [ -n "${OUTPUT_UID}" ]; then
