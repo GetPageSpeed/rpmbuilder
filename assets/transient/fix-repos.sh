@@ -59,3 +59,13 @@ if test -f "/usr/bin/dnf"; then
     fi
   done
 fi
+
+# For dnf5 clients: set user_agent directly in repo file
+# dnf5 does NOT load dnf4 Python plugins, so the above is insufficient
+if command -v dnf5 &>/dev/null; then
+  for repo_file in /etc/yum.repos.d/getpagespeed*.repo; do
+    if test -f "$repo_file"; then
+      sed -i '/^\[getpagespeed/a user_agent=XXXXXXXXXX' "$repo_file"
+    fi
+  done
+fi
