@@ -23,7 +23,7 @@ BUILDER_VERSION=el9
 docker pull getpagespeed/rpmbuilder:${BUILDER_VERSION}
 ```
 
-Most images are tagged with the `dist` RPM tag, so you can use `el7`, `el8`, 
+Most images are tagged with the `dist` RPM tag, so you can use `el7`, `el8`,
 `fc38` etc.
 
 ### Run
