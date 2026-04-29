@@ -97,13 +97,16 @@ fi
 # Use custom rpmlint config per repository, if such exists
 [ -f "${SOURCES}/rpmlint.config" ] && cp -f "${SOURCES}"/rpmlint.config /etc/rpmlint/custom.config
 
-# rpmlint 2.8.0+ (Fedora 44+) escalates unused-rpmlintrc-filter to an error.
-# Older rpmlint silently ignored unused filters, so existing addFilter() lines
-# that no longer match anything fail the build only on the newer rpmlint.
-# Drop its badness to 0 so it stops counting as an error (still printed).
-# setBadness is a no-op on older rpmlint that doesn't emit this check.
+# rpmlint 2.8.0+ (Fedora 44+) escalates a handful of checks from W to E.
+# Older rpmlint silently ignored these, so they fail only on newer rpmlint.
+# Drop their badness to 0 so they stop counting as errors (still printed).
+# setBadness is a no-op on older rpmlint that doesn't emit these checks.
+#  - unused-rpmlintrc-filter: stale addFilter() lines per-distro
+#  - spelling-error: nginx module descriptions legitimately mention
+#    "conf"/"ngx"/"usr" which trip the en_US dictionary check
 mkdir -p /etc/rpmlint
 printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
+printf 'setBadness("spelling-error", 0)\n' >> /etc/rpmlint/custom.config
 # Run optional per-repo file with extra build preparations needed like setting up more repos
 [ -f "${SOURCES}"/prepare.sh ] && bash "${SOURCES}"/prepare.sh
 
