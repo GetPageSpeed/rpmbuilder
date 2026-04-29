@@ -57,7 +57,11 @@ case "${DISTRO}" in
           CONFIG_MANAGER="dnf config-manager"
           PRIMARY_REPO_PACKAGES="https://extras.getpagespeed.com/release-latest.rpm";
           PRE_PACKAGES="dnf-plugins-core"
-          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive bc"
+          # glibc-langpack-en + hunspell-en-US: rpmlint's SpellCheck plugin
+          # initializes python-enchant for en_US; without an installed dict it
+          # crashes (DefaultLanguageNotFoundError) before even producing output.
+          # Fedora pulls this in as a rpmlint dep, amzn2023 does not.
+          PACKAGES="dnf-plugins-core gcc rpmlint git rpm-build rpmdevtools tar gcc-c++ redhat-rpm-config which xz sed make bzip2 gzip gcc unzip shadow-utils diffutils cpio bash gawk rpm-build info patch util-linux findutils grep lua libarchive glibc-langpack-en hunspell-en-US bc"
         else
           if [[ ${RELEASE_EPEL} -eq 10 ]]; then
             PRIMARY_REPO_PACKAGES="https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm https://extras.getpagespeed.com/release-latest.rpm";
