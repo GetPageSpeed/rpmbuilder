@@ -111,6 +111,10 @@ printf 'setBadness("spelling-error", 0)\n' >> /etc/rpmlint/custom.config
 # in nginx-mod (in-tree sources copied during %prep) — mute globally.
 printf 'setBadness("use-of-RPM_SOURCE_DIR", 0)\n' >> /etc/rpmlint/custom.config
 printf 'addFilter("use-of-RPM_SOURCE_DIR")\n' >> /etc/rpmlint/custom.config
+# rpmlint 2.8.0 also escalates these to errors; mute since they're noise across our cohort.
+printf 'setBadness("description-line-too-long", 0)\n' >> /etc/rpmlint/custom.config
+printf 'setBadness("no-changelogname-tag", 0)\n' >> /etc/rpmlint/custom.config
+printf 'setBadness("invalid-license", 0)\n' >> /etc/rpmlint/custom.config
 
 # rpmlint's TagsCheck imports python-enchant and instantiates a SpellChecker
 # for en_US at startup. On distros where the enchant backend can't find an
