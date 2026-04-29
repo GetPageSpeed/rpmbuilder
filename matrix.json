@@ -36,8 +36,8 @@
             "include_rolling_release": false,
             "rpmbuilder_name": "fedora",
             "versions": [
-                43,
-                42
+                44,
+                43
             ]
         },
         "amazonlinux": {
