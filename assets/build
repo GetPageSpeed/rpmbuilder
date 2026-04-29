@@ -107,6 +107,22 @@ fi
 mkdir -p /etc/rpmlint
 printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
 printf 'setBadness("spelling-error", 0)\n' >> /etc/rpmlint/custom.config
+
+# rpmlint's TagsCheck imports python-enchant and instantiates a SpellChecker
+# for en_US at startup. On distros where the enchant backend can't find an
+# en_US dictionary (observed: amzn2023, where hunspell-en-US is installed but
+# pyenchant's libenchant doesn't see it), rpmlint crashes with
+# DefaultLanguageNotFoundError before producing any output. Pre-flight check
+# the dict so we can disable rpmlint cleanly on those distros instead of
+# letting the build fail on a check we don't actually care about anyway
+# (spelling-error is already setBadness 0 above).
+if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
+  if ! python3 -c 'import enchant; enchant.Dict("en_US")' >/dev/null 2>&1; then
+    echo "[disable-rpmlint] python-enchant cannot load en_US dictionary; disabling rpmlint for this build" >&2
+    export RPMLINT=0
+  fi
+fi
+
 # Run optional per-repo file with extra build preparations needed like setting up more repos
 [ -f "${SOURCES}"/prepare.sh ] && bash "${SOURCES}"/prepare.sh
 
