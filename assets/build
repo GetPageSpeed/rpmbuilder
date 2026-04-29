@@ -97,28 +97,43 @@ fi
 # Use custom rpmlint config per repository, if such exists
 [ -f "${SOURCES}/rpmlint.config" ] && cp -f "${SOURCES}"/rpmlint.config /etc/rpmlint/custom.config
 
-# rpmlint 2.8.0+ (Fedora 44+) escalates a handful of checks from W to E.
-# Older rpmlint silently ignored these, so they fail only on newer rpmlint.
-# Drop their badness to 0 so they stop counting as errors (still printed).
-# setBadness is a no-op on older rpmlint that doesn't emit these checks.
+mkdir -p /etc/rpmlint
+
+# Detect rpmlint version once; empty if rpmlint not installed. The mutes
+# below MUST be gated to the rpmlint version that introduced the escalation
+# they compensate for — applying them unconditionally on older rpmlint
+# (and on any future rpmlint that re-uses a check name) silently changes
+# behavior across the entire build matrix.
+RPMLINT_VER=""
+if command -v rpmlint >/dev/null 2>&1; then
+  RPMLINT_VER=$(rpmlint --version 2>&1 \
+    | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)
+fi
+# dotted-version >= compare via sort -V (portable to EL7's coreutils).
+ver_ge() { [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$2" ]; }
+
+# rpmlint 2.7+: flags %{_sourcedir}/X as use-of-RPM_SOURCE_DIR; legitimate
+# use in nginx-mod (in-tree sources copied during %prep) — mute on >=2.7.
+if [ -n "${RPMLINT_VER}" ] && ver_ge "${RPMLINT_VER}" "2.7"; then
+  printf 'setBadness("use-of-RPM_SOURCE_DIR", 0)\n' >> /etc/rpmlint/custom.config
+  printf 'addFilter("use-of-RPM_SOURCE_DIR")\n'     >> /etc/rpmlint/custom.config
+fi
+
+# rpmlint 2.8.0+ (Fedora 44+): escalates several warnings to errors. Drop
+# badness to 0 so they print but don't fail the build.
 #  - unused-rpmlintrc-filter: stale addFilter() lines per-distro
 #  - spelling-error: nginx module descriptions legitimately mention
 #    "conf"/"ngx"/"usr" which trip the en_US dictionary check
-mkdir -p /etc/rpmlint
-printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
-printf 'setBadness("spelling-error", 0)\n' >> /etc/rpmlint/custom.config
-# rpmlint 2.7+ flags %{_sourcedir}/X as use-of-RPM_SOURCE_DIR; legitimate use
-# in nginx-mod (in-tree sources copied during %prep) — mute globally.
-printf 'setBadness("use-of-RPM_SOURCE_DIR", 0)\n' >> /etc/rpmlint/custom.config
-printf 'addFilter("use-of-RPM_SOURCE_DIR")\n' >> /etc/rpmlint/custom.config
-# rpmlint 2.8.0 also escalates this generated-spec quirk to error; mute it.
-# (description-line-too-long and invalid-license intentionally NOT muted globally —
-#  they catch real packaging-quality issues that should be fixed in the offending spec.)
-printf 'setBadness("no-changelogname-tag", 0)\n' >> /etc/rpmlint/custom.config
-# rpmlint 2.7+ wraps rpmbuild's "warning: bogus date in %changelog" as E: specfile-error.
-# These are pre-existing changelog day-of-week mismatches; filter the noise (real spec
-# parse errors still report through other rules).
-printf 'addFilter(r"specfile-error.*bogus date in %%changelog")\n' >> /etc/rpmlint/custom.config
+#  - no-changelogname-tag: generated-spec quirk
+# (description-line-too-long and invalid-license intentionally NOT muted —
+#  they catch real packaging-quality issues. bogus-date in %changelog
+#  likewise NOT muted: it indicates a packager typo and should fail the
+#  build so the offending spec gets fixed.)
+if [ -n "${RPMLINT_VER}" ] && ver_ge "${RPMLINT_VER}" "2.8.0"; then
+  printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
+  printf 'setBadness("spelling-error", 0)\n'            >> /etc/rpmlint/custom.config
+  printf 'setBadness("no-changelogname-tag", 0)\n'      >> /etc/rpmlint/custom.config
+fi
 
 # rpmlint's TagsCheck imports python-enchant and instantiates a SpellChecker
 # for en_US at startup. On distros where the enchant backend can't find an
