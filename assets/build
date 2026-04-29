@@ -119,8 +119,8 @@ if [ -n "${RPMLINT_VER}" ] && ver_ge "${RPMLINT_VER}" "2.7"; then
   printf 'addFilter("use-of-RPM_SOURCE_DIR")\n'     >> /etc/rpmlint/custom.config
 fi
 
-# rpmlint 2.8.0+ (Fedora 44+): escalates several warnings to errors. Drop
-# badness to 0 so they print but don't fail the build.
+# rpmlint 2.6+ (el10's 2.7.0, fc44's 2.8.0): escalates several warnings to
+# errors. Drop badness to 0 so they print but don't fail the build.
 #  - unused-rpmlintrc-filter: stale addFilter() lines per-distro
 #  - spelling-error: nginx module descriptions legitimately mention
 #    "conf"/"ngx"/"usr" which trip the en_US dictionary check
@@ -129,7 +129,7 @@ fi
 #  they catch real packaging-quality issues. bogus-date in %changelog
 #  likewise NOT muted: it indicates a packager typo and should fail the
 #  build so the offending spec gets fixed.)
-if [ -n "${RPMLINT_VER}" ] && ver_ge "${RPMLINT_VER}" "2.8.0"; then
+if [ -n "${RPMLINT_VER}" ] && ver_ge "${RPMLINT_VER}" "2.6"; then
   printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
   printf 'setBadness("spelling-error", 0)\n'            >> /etc/rpmlint/custom.config
   printf 'setBadness("no-changelogname-tag", 0)\n'      >> /etc/rpmlint/custom.config
