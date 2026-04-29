@@ -100,11 +100,10 @@ fi
 # rpmlint 2.8.0+ (Fedora 44+) escalates unused-rpmlintrc-filter to an error.
 # Older rpmlint silently ignored unused filters, so existing addFilter() lines
 # that no longer match anything fail the build only on the newer rpmlint.
-# Mute that one check globally so we don't have to track which filter is still
-# relevant per distro. addFilter is a no-op on older rpmlint where the message
-# never fires, and silences it on 2.8.0+.
+# Drop its badness to 0 so it stops counting as an error (still printed).
+# setBadness is a no-op on older rpmlint that doesn't emit this check.
 mkdir -p /etc/rpmlint
-printf '\naddFilter("unused-rpmlintrc-filter")\n' >> /etc/rpmlint/custom.config
+printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
 # Run optional per-repo file with extra build preparations needed like setting up more repos
 [ -f "${SOURCES}"/prepare.sh ] && bash "${SOURCES}"/prepare.sh
 
