@@ -107,6 +107,10 @@ fi
 mkdir -p /etc/rpmlint
 printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
 printf 'setBadness("spelling-error", 0)\n' >> /etc/rpmlint/custom.config
+# rpmlint 2.7+ flags %{_sourcedir}/X as use-of-RPM_SOURCE_DIR; legitimate use
+# in nginx-mod (in-tree sources copied during %prep) — mute globally.
+printf 'setBadness("use-of-RPM_SOURCE_DIR", 0)\n' >> /etc/rpmlint/custom.config
+printf 'addFilter("use-of-RPM_SOURCE_DIR")\n' >> /etc/rpmlint/custom.config
 
 # rpmlint's TagsCheck imports python-enchant and instantiates a SpellChecker
 # for en_US at startup. On distros where the enchant backend can't find an
@@ -299,7 +303,15 @@ build_spec() {
   fi
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # check the spec file for obvious errors using rpmlint
-    rpmlint "$specFile"
+    # Pass --rpmlintrc explicitly so /etc/rpmlint/custom.config is loaded on
+    # rpmlint 2.7+ where auto-loading appears unreliable; keeps our setBadness
+    # globals (unused-rpmlintrc-filter, spelling-error, use-of-RPM_SOURCE_DIR)
+    # in effect at spec-check stage.
+    if test -f /etc/rpmlint/custom.config; then
+      rpmlint "$specFile" --rpmlintrc /etc/rpmlint/custom.config
+    else
+      rpmlint "$specFile"
+    fi
   fi
 
   # install build requires
