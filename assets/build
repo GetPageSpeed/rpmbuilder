@@ -389,13 +389,18 @@ for specFile in "${RPM_BUILD_SPECS}"/*.spec; do
   spec_name=$(basename "$specFile" .spec)
   start_time=$(date +%s)
 
-  build_output=$(build_spec "${specFile}" 2>&1) && build_exit=0 || build_exit=$?
+  # Stream output to CI in real time AND capture for JUnit failure body.
+  # Capturing into a shell var (build_output=$(...)) buffers everything until
+  # the spec finishes, leaving CI silent for the whole build — slow aarch64
+  # builds then trip CircleCI's no_output_timeout.
+  build_log=$(mktemp)
+  build_spec "${specFile}" 2>&1 | tee "$build_log"
+  build_exit=${PIPESTATUS[0]}
+  build_output=$(cat "$build_log")
+  rm -f "$build_log"
 
   end_time=$(date +%s)
   duration=$((end_time - start_time))
-
-  # Still print output to stdout
-  echo "$build_output"
 
   if [ $build_exit -eq 0 ]; then
     success_count=$((success_count + 1))
