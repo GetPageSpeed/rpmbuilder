@@ -119,21 +119,22 @@ if [ -n "${RPMLINT_VER}" ] && ver_ge "${RPMLINT_VER}" "2.7"; then
   printf 'addFilter("use-of-RPM_SOURCE_DIR")\n'     >> /etc/rpmlint/custom.config
 fi
 
-# rpmlint 2.6+ (el10's 2.7.0, fc44's 2.8.0): escalates several warnings to
-# errors. Drop badness to 0 so they print but don't fail the build.
+# Mute rpmlint checks that have varying badness across versions but are
+# either spurious for our packaging or surface long-standing project quirks:
 #  - unused-rpmlintrc-filter: stale addFilter() lines per-distro
 #  - spelling-error: nginx module descriptions legitimately mention
 #    "conf"/"ngx"/"usr" which trip the en_US dictionary check
-#  - no-changelogname-tag: generated-spec quirk
+#  - no-changelogname-tag: generated-spec quirk (rpmlint flags this as E
+#    even on rpmlint 1.x / 2.0)
 # (description-line-too-long and invalid-license intentionally NOT muted —
 #  they catch real packaging-quality issues. bogus-date in %changelog
 #  likewise NOT muted: it indicates a packager typo and should fail the
 #  build so the offending spec gets fixed.)
-if [ -n "${RPMLINT_VER}" ] && ver_ge "${RPMLINT_VER}" "2.6"; then
-  printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
-  printf 'setBadness("spelling-error", 0)\n'            >> /etc/rpmlint/custom.config
-  printf 'setBadness("no-changelogname-tag", 0)\n'      >> /etc/rpmlint/custom.config
-fi
+# setBadness is a no-op on older rpmlints that don't support it, so the
+# mutes are safe to apply unconditionally.
+printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
+printf 'setBadness("spelling-error", 0)\n'            >> /etc/rpmlint/custom.config
+printf 'setBadness("no-changelogname-tag", 0)\n'      >> /etc/rpmlint/custom.config
 
 # rpmlint's TagsCheck imports python-enchant and instantiates a SpellChecker
 # for en_US at startup. On distros where the enchant backend can't find an
