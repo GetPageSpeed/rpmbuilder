@@ -448,9 +448,17 @@ for specFile in "${RPM_BUILD_SPECS}"/*.spec; do
   # Capturing into a shell var (build_output=$(...)) buffers everything until
   # the spec finishes, leaving CI silent for the whole build — slow aarch64
   # builds then trip CircleCI's no_output_timeout.
+  #
+  # `|| build_exit=$?` exempts the pipeline from the shell-wide `set -exo
+  # pipefail`. Without it, a single spec's `%build` failure trips set -e,
+  # the script dies before the JUnit XML write below, and CircleCI reports
+  # "Found no test results, skipping". The function itself still runs under
+  # set -e (so e.g. rpmbuild -ba is skipped after -bs failure); we only
+  # neutralize the abort at the call site so the failure-tolerance loop
+  # gets to decide.
   build_log=$(mktemp)
-  build_spec "${specFile}" 2>&1 | tee "$build_log"
-  build_exit=${PIPESTATUS[0]}
+  build_exit=0
+  build_spec "${specFile}" 2>&1 | tee "$build_log" || build_exit=$?
   build_output=$(cat "$build_log")
   rm -f "$build_log"
 
