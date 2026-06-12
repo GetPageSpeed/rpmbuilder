@@ -124,10 +124,12 @@
                     ]
                 },
                 "freenginx-stable": {
-                    "description": "FreeNGINX Stable"
+                    "description": "FreeNGINX Stable",
+                    "enable_repos": null
                 },
                 "freenginx-mainline": {
-                    "description": "FreeNGINX Mainline"
+                    "description": "FreeNGINX Mainline",
+                    "enable_repos": "getpagespeed-freenginx-mainline"
                 }
             }
         },
