@@ -9,6 +9,7 @@
             "dir": "redhat",
             "rpmbuilder_name": "centos",
             "description": "CentOS/RHEL",
+            "human_label": "AlmaLinux / Rocky / RHEL",
             "has_plesk": true,
             "docker": "rockylinux",
             "packager": "dnf",
@@ -33,6 +34,7 @@
             "dist": "fc",
             "dir": "fedora",
             "description": "Fedora Linux",
+            "human_label": "Fedora",
             "include_rolling_release": false,
             "rpmbuilder_name": "fedora",
             "versions": [
@@ -43,6 +45,7 @@
         "amazonlinux": {
             "dist": "amzn",
             "description": "Amazon Linux",
+            "human_label": "Amazon Linux",
             "versions_check": false,
             "versions": [
                 2,
@@ -59,6 +62,7 @@
         "sles": {
             "dist": "sles",
             "description": "SUSE Linux Enterprise",
+            "human_label": "SLES / openSUSE Leap",
             "os_versions": 1,
             "docker": "opensuse/leap",
             "rpmbuilder_name": "opensuse",
@@ -114,6 +118,7 @@
                 "ea4": {
                     "description": "EA4",
                     "git_branch": "ea4",
+                    "failure_tolerance": "1.0",
                     "only_dists": [
                         "el7",
                         "el8",
@@ -122,10 +127,6 @@
                     "only_archs": [
                         "x86_64"
                     ]
-                },
-                "freenginx-stable": {
-                    "description": "FreeNGINX Stable",
-                    "enable_repos": null
                 },
                 "freenginx-mainline": {
                     "description": "FreeNGINX Mainline",
