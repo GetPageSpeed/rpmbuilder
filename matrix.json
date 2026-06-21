@@ -118,7 +118,7 @@
                 "ea4": {
                     "description": "EA4",
                     "git_branch": "ea4",
-                    "failure_tolerance": "1.0",
+                    "failure_tolerance": "0.0",
                     "only_dists": [
                         "el7",
                         "el8",
