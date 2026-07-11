@@ -131,6 +131,14 @@
                 "freenginx-mainline": {
                     "description": "FreeNGINX Mainline",
                     "enable_repos": "getpagespeed-freenginx-mainline"
+                },
+                "edge": {
+                    "description": "EDGE",
+                    "only_dists": [
+                        "el8",
+                        "el9",
+                        "el10"
+                    ]
                 }
             }
         },
