@@ -31,6 +31,46 @@ retry() {
     return 1
 }
 
+# openSUSE image-build resilience against mirror-pool lag.
+#
+# The fast path is cdn.opensuse.org: its MirrorCache metalink lets libzypp
+# download packages in parallel across the geo-mirror pool (~5-11 min for the
+# whole opensuse job). But when a package was just rebuilt (e.g.
+# patch-2.7.6-160000.4.1) and has not yet synced to every mirror, libzypp 17.38
+# fans out, 404s across the pool ("trying next mirror") and does NOT fall back to
+# the origin, so the install aborts. ZYPP_MULTICURL=0 / ZYPP_MEDIANETWORK=0 do
+# not disable the fan-out on this backend.
+#
+# install_pkgs keeps the fast pool as the primary path and only pays a cost when
+# it actually breaks: on failure it switches the openSUSE base repos to a plain,
+# metalink-free Tier-1 mirror (mirror.fcix.net serves the tree directly; it 404s
+# *.rpm.metalink), which forces a deterministic single-source download that can't
+# land on a lagging mirror, and retries. It stays on the fallback for the rest of
+# the build; suse_restore_cdn (end of this script) restores cdn so the SHIPPED
+# image keeps the fast pool + baked metadata cache and takes no hard dependency
+# on any single third-party mirror. Non-openSUSE distros just get the retry.
+SUSE_FALLBACK_MIRROR="https://mirror.fcix.net/opensuse"
+SUSE_ON_FALLBACK=0
+install_pkgs() {
+    if retry 5 ${INSTALLER} "$@"; then
+        return 0
+    fi
+    if [ "${ID-}" = "opensuse-leap" ] && [ "${SUSE_ON_FALLBACK}" = "0" ]; then
+        echo "openSUSE install failed on the cdn mirror pool (likely mirror-sync lag); switching to ${SUSE_FALLBACK_MIRROR}"
+        sed -i -e "s,http://cdn\.opensuse\.org/,${SUSE_FALLBACK_MIRROR}/,g" /etc/zypp/repos.d/*.repo
+        zypper --non-interactive --gpg-auto-import-keys refresh --force || true
+        SUSE_ON_FALLBACK=1
+        retry 3 ${INSTALLER} "$@"
+        return $?
+    fi
+    return 1
+}
+suse_restore_cdn() {
+    if [ "${SUSE_ON_FALLBACK}" = "1" ]; then
+        sed -i -e "s,${SUSE_FALLBACK_MIRROR}/,http://cdn.opensuse.org/,g" /etc/zypp/repos.d/*.repo
+    fi
+}
+
 RHEL=$(rpm -E "0%{?rhel}")
 # removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
 RHEL=${RHEL##+(0)}
@@ -126,25 +166,10 @@ esac
 if test -n "${ID-}"; then
   if [ "$ID" = "opensuse-leap" ]; then
       echo "Do something Leap specific"
-      # openSUSE mirror-pool lag breaks the image build. cdn.opensuse.org (and
-      # download/downloadcontent) front MirrorCache, which hands libzypp a metalink
-      # mirror list; libzypp's multi-mirror preloader fans package downloads across
-      # that pool. When a package was just rebuilt (e.g. patch-2.7.6-160000.4.1)
-      # the current metadata references it but not every mirror has synced the new
-      # RPM yet, so the preload 404s ("trying next mirror") across the whole pool
-      # and the install aborts. libzypp 17.38 does NOT fall back to the origin, and
-      # ZYPP_MULTICURL=0 / ZYPP_MEDIANETWORK=0 do not disable the fan-out on this
-      # backend. The reliable fix is to sidestep MirrorCache entirely: point the
-      # base repos at a single well-synced Tier-1 mirror that serves a plain
-      # directory tree with NO metalink (verified: mirror.fcix.net returns 404 for
-      # *.rpm.metalink), so libzypp downloads single-source and can't hit a lagging
-      # mirror. FCIX is a large, fast, US-based mirror (close to the CI runners).
-      # This is build-time only: we restore cdn.opensuse.org at the end of this
-      # script so the shipped image keeps the fast geo-mirror pool (and the metadata
-      # cache the Dockerfile bakes right after) for downstream package builds.
-      sed -i -e 's,http://cdn\.opensuse\.org/,https://mirror.fcix.net/opensuse/,g' /etc/zypp/repos.d/*.repo
-      retry 5 zypper --non-interactive --gpg-auto-import-keys refresh --force
-      # Ensure dnf and its plugins are present using zypper first; dnf may not be usable yet
+      # Ensure dnf and its plugins are present using zypper first; dnf may not be
+      # usable yet. These are stable base packages served from the fast cdn mirror
+      # pool; the freshly-rebuilt-package mirror lag that install_pkgs guards
+      # against below has not been observed on them.
       retry 5 zypper --non-interactive install dnf dnf-plugins-core libdnf-repo-config-zypp
       # this repo has None for type=
       rm -rf /etc/zypp/repos.d/repo-backports-debug-update.repo
@@ -206,9 +231,9 @@ fi
 
 /tmp/fix-repos.sh
 
-retry 5 ${INSTALLER} ${PRE_PACKAGES}
+install_pkgs ${PRE_PACKAGES}
 
-retry 5 ${INSTALLER} ${PACKAGES}
+install_pkgs ${PACKAGES}
 
 ln -sf "${RPM_BUILD_DIR}" /root/rpmbuild
 mkdir -p "${SOURCES}" "${WORKSPACE}" "${OUTPUT}" "${RPM_BUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
@@ -239,11 +264,8 @@ fi
 # The build script uses /usr/bin/pkgr to install build dependencies
 ln -sf /usr/bin/${PKGR} /usr/bin/pkgr
 
-# Restore the openSUSE Leap base repos to cdn.opensuse.org after our build-time
-# installs. We only pointed them at the FCIX mirror above to dodge mirror-pool
-# lag during THIS image build; the shipped image must keep the fast geo-mirror
-# pool (and the metadata cache the Dockerfile bakes right after this script), and
-# must not carry a hard dependency on any single third-party mirror.
-if [ "${ID-}" = "opensuse-leap" ]; then
-  sed -i -e 's,https://mirror\.fcix\.net/opensuse/,http://cdn.opensuse.org/,g' /etc/zypp/repos.d/*.repo
-fi
+# If install_pkgs had to fall back to the FCIX mirror during this build, put the
+# openSUSE base repos back on cdn.opensuse.org so the shipped image keeps the fast
+# geo-mirror pool (and the metadata cache the Dockerfile bakes right after this
+# script) and carries no hard dependency on a single third-party mirror.
+suse_restore_cdn
