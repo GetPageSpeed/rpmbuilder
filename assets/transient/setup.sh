@@ -52,12 +52,25 @@ retry() {
 SUSE_FALLBACK_MIRROR="https://mirror.fcix.net/opensuse"
 SUSE_ON_FALLBACK=0
 install_pkgs() {
-    if retry 5 ${INSTALLER} "$@"; then
+    # Fail fast off the cdn pool (2 attempts) so we drop into the fallback quickly
+    # when the pool is genuinely missing a package rather than burning retries.
+    if retry 2 ${INSTALLER} "$@"; then
         return 0
     fi
     if [ "${ID-}" = "opensuse-leap" ] && [ "${SUSE_ON_FALLBACK}" = "0" ]; then
         echo "openSUSE install failed on the cdn mirror pool (likely mirror-sync lag); switching to ${SUSE_FALLBACK_MIRROR}"
-        sed -i -e "s,http://cdn\.opensuse\.org/,${SUSE_FALLBACK_MIRROR}/,g" /etc/zypp/repos.d/*.repo
+        # Repoint the base repos at the plain FCIX mirror AND detach them from the
+        # 'openSUSE' service. This detach is essential: the repos are created by a
+        # zypp service, and the very next 'zypper refresh' triggers a service
+        # refresh that regenerates /etc/zypp/repos.d/*.repo from the service
+        # definition -- silently reverting our URL rewrite back to cdn, so the
+        # retry would fan out across the lagging pool again and the build would
+        # loop forever. Dropping the 'service=' line, disabling autorefresh, and
+        # removing the service file make the repos standalone so the rewrite sticks.
+        sed -i -e "s,http://cdn\.opensuse\.org/,${SUSE_FALLBACK_MIRROR}/,g" \
+               -e "/^service=openSUSE/d" \
+               -e "s,^autorefresh=1,autorefresh=0,g" /etc/zypp/repos.d/*.repo
+        rm -f /etc/zypp/services.d/*.service
         zypper --non-interactive --gpg-auto-import-keys refresh --force || true
         SUSE_ON_FALLBACK=1
         retry 3 ${INSTALLER} "$@"
