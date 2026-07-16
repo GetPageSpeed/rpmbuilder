@@ -130,10 +130,13 @@ if test -n "${ID-}"; then
       # multi-mirror preload fans package downloads out across it. When a package
       # was just rebuilt (e.g. patch-2.7.6-160000.4.1), the current repo metadata
       # references it but not every mirror has synced the new RPM yet, so the
-      # preload 404s ("trying next mirror") and the whole install aborts. Pin the
-      # base repos to the master content server, which always holds what its own
-      # metadata lists, then refresh so metadata + packages come from that one
-      # consistent source instead of the lagging mirror pool.
+      # preload 404s ("trying next mirror") and the whole install aborts.
+      # TRANSIENTLY pin the base repos to the master content server (which always
+      # holds what its own metadata lists) just for this image's build-time
+      # installs; we restore cdn.opensuse.org at the end of this script so the
+      # shipped image keeps using the fast mirror pool (and its baked metadata
+      # cache) for downstream package builds. Do NOT leave the master pinned:
+      # every downstream build would then hit openSUSE's single master server.
       sed -i -e 's,://cdn\.opensuse\.org,://downloadcontent.opensuse.org,g' /etc/zypp/repos.d/*.repo
       retry 5 zypper --non-interactive --gpg-auto-import-keys refresh --force
       # Ensure dnf and its plugins are present using zypper first; dnf may not be usable yet
@@ -230,3 +233,12 @@ fi
 # Symlink packager command to /usr/bin/pkgr (yum or dnf)
 # The build script uses /usr/bin/pkgr to install build dependencies
 ln -sf /usr/bin/${PKGR} /usr/bin/pkgr
+
+# Restore the openSUSE Leap base repos to cdn.opensuse.org after our build-time
+# installs. We only pinned the master content server above to dodge mirror-pool
+# lag during THIS image build; the shipped image must keep the fast geo-mirror
+# pool (and the metadata cache the Dockerfile bakes right after this script) so
+# downstream package builds don't all hammer openSUSE's single master server.
+if [ "${ID-}" = "opensuse-leap" ]; then
+  sed -i -e 's,://downloadcontent\.opensuse\.org,://cdn.opensuse.org,g' /etc/zypp/repos.d/*.repo
+fi
