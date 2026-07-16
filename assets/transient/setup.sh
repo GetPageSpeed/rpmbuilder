@@ -126,6 +126,12 @@ esac
 if test -n "${ID-}"; then
   if [ "$ID" = "opensuse-leap" ]; then
       echo "Do something Leap specific"
+      # The base image ships stale repo metadata; the mirror moves packages
+      # (e.g. patch-2.7.6-*) out from under it, so a cached-metadata install
+      # 404s on the superseded RPM. Force a metadata refresh before any install
+      # so we resolve against the live mirror. (The Dockerfile's own refresh
+      # step runs only after setup.sh, which is too late for this install.)
+      retry 5 zypper --non-interactive --gpg-auto-import-keys refresh --force
       # Ensure dnf and its plugins are present using zypper first; dnf may not be usable yet
       retry 5 zypper --non-interactive install dnf dnf-plugins-core libdnf-repo-config-zypp
       # this repo has None for type=
