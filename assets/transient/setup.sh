@@ -126,11 +126,15 @@ esac
 if test -n "${ID-}"; then
   if [ "$ID" = "opensuse-leap" ]; then
       echo "Do something Leap specific"
-      # The base image ships stale repo metadata; the mirror moves packages
-      # (e.g. patch-2.7.6-*) out from under it, so a cached-metadata install
-      # 404s on the superseded RPM. Force a metadata refresh before any install
-      # so we resolve against the live mirror. (The Dockerfile's own refresh
-      # step runs only after setup.sh, which is too late for this install.)
+      # cdn.opensuse.org geoip-redirects into a pool of mirrors, and libzypp's
+      # multi-mirror preload fans package downloads out across it. When a package
+      # was just rebuilt (e.g. patch-2.7.6-160000.4.1), the current repo metadata
+      # references it but not every mirror has synced the new RPM yet, so the
+      # preload 404s ("trying next mirror") and the whole install aborts. Pin the
+      # base repos to the master content server, which always holds what its own
+      # metadata lists, then refresh so metadata + packages come from that one
+      # consistent source instead of the lagging mirror pool.
+      sed -i -e 's,://cdn\.opensuse\.org,://downloadcontent.opensuse.org,g' /etc/zypp/repos.d/*.repo
       retry 5 zypper --non-interactive --gpg-auto-import-keys refresh --force
       # Ensure dnf and its plugins are present using zypper first; dnf may not be usable yet
       retry 5 zypper --non-interactive install dnf dnf-plugins-core libdnf-repo-config-zypp
