@@ -134,7 +134,7 @@
                 },
                 "edge": {
                     "description": "EDGE",
-                    "enable_repos": null,
+                    "enable_repos": "getpagespeed-extras-edge",
                     "only_dists": [
                         "el8",
                         "el9",
