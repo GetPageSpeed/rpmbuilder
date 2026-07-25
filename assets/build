@@ -3,32 +3,58 @@
 # use exit codes of failing commands
 set -exo pipefail
 
+configure_github_credentials() {
+  local xtrace_enabled=false
+  local gh_tok
+  local netrc_path="${RPMBUILDER_NETRC_PATH:-/root/.netrc}"
+  local curlrc_path="${RPMBUILDER_CURLRC_PATH:-/root/.curlrc}"
+
+  # This script normally runs with `set -x`; never trace credential values.
+  if [[ $- == *x* ]]; then
+    xtrace_enabled=true
+    set +x
+  fi
+
+  gh_tok="${GITHUB_TOKEN:-${GITHUB_API_TOKEN:-${LASTVERSION_GITHUB_API_TOKEN:-}}}"
+  if [[ -n "${gh_tok}" ]]; then
+    local old_umask
+    old_umask="$(umask)"
+    umask 077
+    cat > "${netrc_path}" <<EOF
+machine github.com
+  login x-access-token
+  password ${gh_tok}
+machine codeload.github.com
+  login x-access-token
+  password ${gh_tok}
+EOF
+    echo "--netrc" > "${curlrc_path}"
+    umask "${old_umask}"
+    export GITHUB_API_TOKEN="${GITHUB_API_TOKEN:-${gh_tok}}"
+    export GITHUB_TOKEN="${GITHUB_TOKEN:-${gh_tok}}"
+  fi
+
+  if [[ "${xtrace_enabled}" == "true" ]]; then
+    set -x
+  fi
+}
+
+# Unit tests source this file only to exercise helpers above.
+if [[ "${RPMBUILDER_HELPERS_ONLY:-0}" == "1" ]]; then
+  if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+    return 0
+  fi
+  exit 0
+fi
+
 # `bc` is needed for floating point arithmetic, fail if not present
 command -v bc > /dev/null 2>&1 || { echo "bc is required but not installed. Aborting." >&2; exit 1; }
 
 SOURCES=${SOURCES-/sources}
 OUTPUT=${OUTPUT-${SOURCES}}
 
-# If a GitHub token is provided, configure netrc/curl for private source access
-# Prefer GITHUB_TOKEN, then GITHUB_API_TOKEN, then LASTVERSION_GITHUB_API_TOKEN
-GH_TOK="${GITHUB_TOKEN:-${GITHUB_API_TOKEN:-${LASTVERSION_GITHUB_API_TOKEN}}}"
-if [ -n "${GH_TOK}" ]; then
-  # use restrictive umask only for writing secrets, then restore
-  __OLD_UMASK=$(umask)
-  umask 077
-  cat > /root/.netrc <<EOF
-machine github.com
-  login x-access-token
-  password ${GH_TOK}
-machine codeload.github.com
-  login x-access-token
-  password ${GH_TOK}
-EOF
-  echo "--netrc" > /root/.curlrc
-  umask "${__OLD_UMASK}"
-  export GITHUB_API_TOKEN="${GITHUB_API_TOKEN:-${GH_TOK}}"
-  export GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOK}}"
-fi
+# If a GitHub token is provided, configure netrc/curl for private source access.
+configure_github_credentials
 
 # The following is to support legacy prepare.sh scripts which call "yum" on "dnf" systems
 # Creates a symlink to dnf if yum is not present
@@ -132,9 +158,11 @@ fi
 #  build so the offending spec gets fixed.)
 # setBadness is a no-op on older rpmlints that don't support it, so the
 # mutes are safe to apply unconditionally.
-printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n' >> /etc/rpmlint/custom.config
-printf 'setBadness("spelling-error", 0)\n'            >> /etc/rpmlint/custom.config
-printf 'setBadness("no-changelogname-tag", 0)\n'      >> /etc/rpmlint/custom.config
+{
+  printf '\nsetBadness("unused-rpmlintrc-filter", 0)\n'
+  printf 'setBadness("spelling-error", 0)\n'
+  printf 'setBadness("no-changelogname-tag", 0)\n'
+} >> /etc/rpmlint/custom.config
 
 # rpmlint's TagsCheck imports python-enchant and instantiates a SpellChecker
 # for en_US at startup. On distros where the enchant backend can't find an
@@ -168,7 +196,7 @@ RPM_BUILD_SPECS=$(rpm --eval '%{_specdir}')
 if [ "$CLEAN" = true ]; then
   # clean existing source and .spec files
   rm -f "${RPM_BUILD_SPECS}"/*.spec
-  rm -rf "${RPM_BUILD_SOURCES}"/*
+  rm -rf "${RPM_BUILD_SOURCES:?}"/*
 fi
 # copy any .spec filess to rpmbuild/SPECS directory
 find "${SOURCES}" -mindepth 1 -maxdepth 1 -name "*.spec" \
@@ -187,6 +215,7 @@ chmod 0755 /root
 
 # Detect OS for distro-specific dependency installation logic
 if [[ -f /etc/os-release ]]; then
+  # shellcheck disable=SC1091 # The path is supplied by the build image.
   . /etc/os-release
 fi
 
@@ -218,6 +247,7 @@ zypper_builddep() {
     return 0
   fi
   # Use no-recommends to keep image lean; force-resolution to satisfy pkgconfig() virtuals
+  # shellcheck disable=SC2086 # One package expression per line must become separate arguments.
   if ! zypper --non-interactive install --no-recommends --force-resolution ${reqs}; then
     echo "zypper failed to install some build dependencies for ${spec_file}"
     return 1
