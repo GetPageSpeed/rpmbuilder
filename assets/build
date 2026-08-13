@@ -39,6 +39,34 @@ EOF
   fi
 }
 
+ensure_requested_repo_definition() {
+  local repo_id=$1
+  local rhel=$2
+  local etc_dir="${RPMBUILDER_REPO_ETC_DIR:-/etc/yum.repos.d}"
+  local share_dir="${RPMBUILDER_REPO_SHARE_DIR:-/usr/share/getpagespeed}"
+  local repo_file="${repo_id}.repo"
+
+  if [[ ! -f "${etc_dir}/${repo_file}" && ! -f "${share_dir}/${repo_file}" ]]; then
+    echo "Repository ${repo_id} is absent; refreshing getpagespeed-extras-release"
+    if command -v dnf5 >/dev/null 2>&1; then
+      dnf5 upgrade --assumeyes getpagespeed-extras-release
+    elif [[ "$rhel" -gt 0 && "$rhel" -le 7 ]]; then
+      yum update --assumeyes getpagespeed-extras-release
+    else
+      dnf upgrade --assumeyes getpagespeed-extras-release
+    fi
+  fi
+
+  if [[ -f "${share_dir}/${repo_file}" && ! -f "${etc_dir}/${repo_file}" ]]; then
+    cp "${share_dir}/${repo_file}" "${etc_dir}/"
+  fi
+
+  if [[ ! -f "${etc_dir}/${repo_file}" ]]; then
+    echo "Requested repository definition is unavailable: ${repo_id}" >&2
+    return 1
+  fi
+}
+
 # Unit tests source this file only to exercise helpers above.
 if [[ "${RPMBUILDER_HELPERS_ONLY:-0}" == "1" ]]; then
   if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
@@ -106,11 +134,9 @@ touch /var/lib/rpm/*
 
 # enable specified repositories before build
 if [[ -n ${ENABLE_REPOS} ]]; then
-  # Install repo definition if shipped by getpagespeed-extras-release but not yet in yum.repos.d
-  REPO_FILE="/usr/share/getpagespeed/${ENABLE_REPOS}.repo"
-  if [ -f "${REPO_FILE}" ] && [ ! -f "/etc/yum.repos.d/${ENABLE_REPOS}.repo" ]; then
-    cp "${REPO_FILE}" /etc/yum.repos.d/
-  fi
+  # Refresh the narrowly scoped release package when a newly introduced
+  # channel is absent from an older builder image, then install its definition.
+  ensure_requested_repo_definition "${ENABLE_REPOS}" "${RHEL}"
   if command -v dnf5 > /dev/null 2>&1; then
     dnf5 config-manager setopt "${ENABLE_REPOS}".enabled=1
   elif [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then  # if more than 0 and less or equal than 7
