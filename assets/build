@@ -39,14 +39,35 @@ EOF
   fi
 }
 
+repo_definition_file() {
+  # Channels are not one-file-per-id: e.g. getpagespeed-extras-mainline is a
+  # [section] inside getpagespeed-extras.repo, while -plesk/-ea4 ship their
+  # own files. Print the path of whichever *.repo defines the section.
+  local repo_id=$1
+  local dir=$2
+  local f
+  for f in "${dir}"/*.repo; do
+    [[ -f "$f" ]] || continue
+    if grep -q "^\[${repo_id}\]" "$f"; then
+      echo "$f"
+      return 0
+    fi
+  done
+  return 1
+}
+
 ensure_requested_repo_definition() {
   local repo_id=$1
   local rhel=$2
   local etc_dir="${RPMBUILDER_REPO_ETC_DIR:-/etc/yum.repos.d}"
   local share_dir="${RPMBUILDER_REPO_SHARE_DIR:-/usr/share/getpagespeed}"
-  local repo_file="${repo_id}.repo"
+  local src
 
-  if [[ ! -f "${etc_dir}/${repo_file}" && ! -f "${share_dir}/${repo_file}" ]]; then
+  if repo_definition_file "${repo_id}" "${etc_dir}" >/dev/null; then
+    return 0
+  fi
+
+  if ! repo_definition_file "${repo_id}" "${share_dir}" >/dev/null; then
     echo "Repository ${repo_id} is absent; refreshing getpagespeed-extras-release"
     if command -v dnf5 >/dev/null 2>&1; then
       dnf5 upgrade --assumeyes getpagespeed-extras-release
@@ -57,11 +78,13 @@ ensure_requested_repo_definition() {
     fi
   fi
 
-  if [[ -f "${share_dir}/${repo_file}" && ! -f "${etc_dir}/${repo_file}" ]]; then
-    cp "${share_dir}/${repo_file}" "${etc_dir}/"
+  if ! repo_definition_file "${repo_id}" "${etc_dir}" >/dev/null; then
+    if src=$(repo_definition_file "${repo_id}" "${share_dir}"); then
+      cp "${src}" "${etc_dir}/"
+    fi
   fi
 
-  if [[ ! -f "${etc_dir}/${repo_file}" ]]; then
+  if ! repo_definition_file "${repo_id}" "${etc_dir}" >/dev/null; then
     echo "Requested repository definition is unavailable: ${repo_id}" >&2
     return 1
   fi
@@ -126,8 +149,10 @@ while [[ "$1" != "" ]]; do
 done
 
 RHEL=$(rpm -E "0%{?rhel}")
-# removes leading zeros, e.g. 07 becomes 0, but 0 stays 0
-RHEL=${RHEL##+(0)}
+# Force decimal: "09" -> 9, "010" -> 10, "0" -> 0. The previous extglob
+# strip needed `shopt -s extglob` and silently left "09", which then blew
+# up `[[ ... -gt ... ]]` arithmetic as an invalid octal.
+RHEL=$((10#${RHEL}))
 
 # https://docs.oracle.com/cd/E93554_01/E69348/html/uek4-czc_xmc_xt.html
 touch /var/lib/rpm/*
