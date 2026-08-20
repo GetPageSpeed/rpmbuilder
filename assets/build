@@ -56,6 +56,45 @@ repo_definition_file() {
   return 1
 }
 
+adopt_repo_section_from_rpmnew() {
+  # The repo files are %config(noreplace) and getpagespeed-extras-release's
+  # %post rewrites them in place (/redhat/ -> /amzn/ or /fedora/ on first
+  # install; older releases hardcoded $releasever). RPM therefore parks every
+  # later upgrade at <file>.rpmnew and the live file's channel list freezes at
+  # whatever the base image shipped -- getpagespeed/lts:el7 froze it in
+  # Sep 2024, so freenginx-mainline never reached el7 and refreshing the
+  # release package could not help (it was already at the newest release).
+  # Copy across just the missing [section], leaving the live file's own URL
+  # rewrites intact.
+  local repo_id=$1
+  local dir=$2
+  local rpmnew live section rewrite
+  for rpmnew in "${dir}"/*.repo.rpmnew; do
+    [[ -f "$rpmnew" ]] || continue
+    grep -q "^\[${repo_id}\]" "$rpmnew" || continue
+    live="${rpmnew%.rpmnew}"
+    [[ -f "$live" ]] || continue
+    section=$(awk -v id="[${repo_id}]" '
+      $0 == id { inside = 1; print; next }
+      inside && /^\[/ { exit }
+      inside { print }
+    ' "$rpmnew")
+    [[ -n "$section" ]] || continue
+    # Mirror the per-family path rewrite the release package applies in %post.
+    rewrite=''
+    if [[ $(rpm -E '%{amzn}' 2>/dev/null) =~ ^[0-9]+$ ]]; then
+      rewrite='s@/redhat/@/amzn/@g'
+    elif [[ $(rpm -E '%{fedora}' 2>/dev/null) =~ ^[0-9]+$ ]]; then
+      rewrite='s@/redhat/@/fedora/@g'
+    fi
+    [[ -z "$rewrite" ]] || section=$(printf '%s\n' "$section" | sed "$rewrite")
+    printf '\n%s\n' "$section" >> "$live"
+    echo "Adopted ${repo_id} from $(basename "$rpmnew") into $(basename "$live")"
+    return 0
+  done
+  return 1
+}
+
 ensure_requested_repo_definition() {
   local repo_id=$1
   local rhel=$2
@@ -76,6 +115,13 @@ ensure_requested_repo_definition() {
     else
       dnf upgrade --assumeyes getpagespeed-extras-release
     fi
+  fi
+
+  # A refresh is a no-op when the release package is already current but its
+  # repo file was parked at .rpmnew; take the section from there.
+  if ! repo_definition_file "${repo_id}" "${etc_dir}" >/dev/null; then
+    adopt_repo_section_from_rpmnew "${repo_id}" "${etc_dir}" ||
+      adopt_repo_section_from_rpmnew "${repo_id}" "${share_dir}" || true
   fi
 
   if ! repo_definition_file "${repo_id}" "${etc_dir}" >/dev/null; then

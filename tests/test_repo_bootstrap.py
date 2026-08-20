@@ -125,6 +125,66 @@ class RepoBootstrapTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertFalse((temp_dir / "yum-called").exists())
 
+    def test_section_is_adopted_from_pending_rpmnew(self) -> None:
+        """A channel parked at <file>.rpmnew is merged into the live file.
+
+        Regression: the repo files are %config(noreplace) and the release
+        package rewrites them in %post, so an image whose base already carried
+        a modified copy (getpagespeed/lts:el7) freezes its channel list --
+        refreshing the already-current release package cannot unfreeze it.
+        This broke every el7 freenginx-mainline build (2026-08-20).
+        """
+        with tempfile.TemporaryDirectory() as raw_temp_dir:
+            temp_dir = Path(raw_temp_dir)
+            etc_dir = temp_dir / "etc"
+            bin_dir = temp_dir / "bin"
+            etc_dir.mkdir()
+            bin_dir.mkdir()
+            live = etc_dir / "getpagespeed-extras.repo"
+            live.write_text("[getpagespeed-extras]\nenabled=1\n")
+            (etc_dir / "getpagespeed-extras.repo.rpmnew").write_text(
+                "[getpagespeed-extras]\nenabled=1\n"
+                "[getpagespeed-freenginx-mainline]\n"
+                "baseurl=https://extras.getpagespeed.com/redhat/$releasever/"
+                "freenginx-mainline/$basearch/\n"
+                "enabled=0\n"
+                "[getpagespeed-extras-angie]\nenabled=0\n"
+            )
+            yum = bin_dir / "yum"
+            yum.write_text("#!/usr/bin/env bash\n:\n")
+            yum.chmod(0o755)
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "PATH": f"{bin_dir}:/usr/bin:/bin",
+                    "RPMBUILDER_HELPERS_ONLY": "1",
+                    "RPMBUILDER_REPO_ETC_DIR": str(etc_dir),
+                    "RPMBUILDER_REPO_SHARE_DIR": str(temp_dir / "no-share"),
+                }
+            )
+            result = subprocess.run(
+                [
+                    "bash",
+                    "-c",
+                    'source "$1"; '
+                    "ensure_requested_repo_definition "
+                    "getpagespeed-freenginx-mainline 7",
+                    "test-repo-bootstrap",
+                    str(self.build_script),
+                ],
+                capture_output=True,
+                env=env,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            merged = live.read_text()
+            self.assertIn("[getpagespeed-freenginx-mainline]", merged)
+            self.assertIn("freenginx-mainline/$basearch/", merged)
+            # Only the requested section travels across.
+            self.assertNotIn("[getpagespeed-extras-angie]", merged)
+
 
 if __name__ == "__main__":
     unittest.main()
