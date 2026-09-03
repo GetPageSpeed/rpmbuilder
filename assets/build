@@ -343,6 +343,10 @@ zypper_builddep() {
     echo "No BuildRequires found in ${spec_file}; skipping zypper install."
     return 0
   fi
+  # Collapse versioned expressions ("name >= 1.2" / "name = 1.2") into zypper
+  # capability syntax ("name>=1.2") so word-splitting below yields one argument
+  # per dependency instead of three.
+  reqs=$(echo "${reqs}" | sed 's/ //g')
   # Use no-recommends to keep image lean; force-resolution to satisfy pkgconfig() virtuals
   # shellcheck disable=SC2086 # One package expression per line must become separate arguments.
   if ! zypper --non-interactive install --no-recommends --force-resolution ${reqs}; then
@@ -494,13 +498,54 @@ build_spec() {
     SPECTOOL_CMD="rpmdev-spectool"
   fi
   if [[ -n ${SPECTOOL_CMD} ]]; then
-    ${SPECTOOL_CMD} --sourcedir --get-files "$specFile"
+    # A failed fetch must fail the spec NOW: this function's caller suppresses
+    # set -e (|| build_exit=$?), so an unchecked fetch failure would fall
+    # through and burn rpmbuild attempts against a missing tarball (incident
+    # 2026-08-28: IPv6-unreachable nginx.org, curl exit 7). spectool exits 0
+    # even when a download fails, so verify every remote Source/Patch landed;
+    # on a miss, retry once over IPv4 with curl retries (a scoped CURL_HOME
+    # curlrc reaches the curl that spectool spawns without polluting later
+    # specs), then give up loudly.
+    remote_sources_present() {
+      local line fname missing=0
+      while IFS= read -r line; do
+        line=${line#*: }
+        [[ ${line} == *://* ]] || continue
+        fname=${line##*/}
+        fname=${fname%%\?*}
+        if [[ ! -f "${RPM_BUILD_SOURCES}/${fname}" ]]; then
+          echo "Missing source after fetch: ${fname} (${line})"
+          missing=1
+        fi
+      done < <(${SPECTOOL_CMD} --list-files "$1")
+      return ${missing}
+    }
+    ${SPECTOOL_CMD} --sourcedir --get-files "$specFile" || true
+    if ! remote_sources_present "$specFile"; then
+      echo "Source fetch incomplete for ${specFile}; retrying once over IPv4 with retries..."
+      retry_curl_home=$(mktemp -d)
+      {
+        [[ -f /root/.curlrc ]] && cat /root/.curlrc
+        echo "ipv4"
+        echo "retry = 3"
+      } > "${retry_curl_home}/.curlrc"
+      CURL_HOME="${retry_curl_home}" ${SPECTOOL_CMD} --sourcedir --get-files "$specFile" || true
+      rm -rf "${retry_curl_home}"
+      if ! remote_sources_present "$specFile"; then
+        echo "FATAL: could not fetch all sources for ${specFile}; failing this spec instead of retrying rpmbuild against missing sources."
+        return 1
+      fi
+    fi
   else
     echo "No spectool available to download sources; skipping source fetch."
   fi
 
-  # build source RPM, also allows to fail quicker
-  rpmbuild -bs "$specFile"
+  # build source RPM, also allows to fail quicker; a missing/corrupt Source
+  # must stop here (see set -e suppression note above)
+  if ! rpmbuild -bs "$specFile"; then
+    echo "FATAL: rpmbuild -bs failed for ${specFile} (missing sources?); failing this spec early."
+    return 1
+  fi
 
   if [[ -n ${RPMLINT} && "${RPMLINT}" != 0 ]]; then
     # Source RPM built successfully. Check it using rpmlint
