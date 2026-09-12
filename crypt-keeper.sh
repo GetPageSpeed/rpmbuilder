@@ -150,6 +150,13 @@ function test() {
     DISTRO=${1}
     VERSION=${2}
     echo "Testing x86_64 build for ${DISTRO}-${VERSION}"
+    # Pull with retry: a transient registry blip must not fail the lane after a successful push.
+    # The test run itself is single-shot so genuine build regressions fail fast.
+    for attempt in 1 2 3 4 5; do
+        docker pull --platform linux/amd64 "$(docker-image-name "${DISTRO}" "${VERSION}")" && break
+        [ "$attempt" -eq 5 ] && exit 1
+        sleep 15
+    done
     docker run --rm --platform linux/amd64 -v "$(pwd)"/tests/hello:/sources "$(docker-image-name "${DISTRO}" "${VERSION}")" build
     echo "Done testing x86_64 build for ${DISTRO}-${VERSION}"
 }

@@ -33,7 +33,23 @@ jobs:
         run: ./crypt-keeper.sh generate ${{ matrix.os }} ${{ matrix.version }}
 
       - name: Log in to Docker Hub
-        run: docker login -u="${{ secrets.DOCKER_USER }}" -p="${{ secrets.DOCKER_PASS }}"
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+        run: |
+          MAX_ATTEMPTS=5
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            if echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin; then
+              exit 0
+            fi
+            echo "docker login attempt $attempt of $MAX_ATTEMPTS failed."
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "Retrying in 15 seconds..."
+              sleep 15
+            fi
+          done
+          echo "All $MAX_ATTEMPTS docker login attempts failed."
+          exit 1
 
       - name: Build And Push Docker Image with Retry
         run: |
