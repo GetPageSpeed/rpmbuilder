@@ -185,6 +185,56 @@ class RepoBootstrapTest(unittest.TestCase):
             # Only the requested section travels across.
             self.assertNotIn("[getpagespeed-extras-angie]", merged)
 
+    def test_client_excludes_are_stripped_for_build(self) -> None:
+        """exclude= lines are removed from the requested channel's file.
+
+        The plesk channel ships exclude=sw-nginx plesk-libstdc++* so customer
+        dnf can never downgrade Plesk's own nginx to our build-dependency
+        mirror; the build container must drop it or builddep cannot install
+        sw-nginx for sw-nginx-compat.
+        """
+        with tempfile.TemporaryDirectory() as raw_temp_dir:
+            temp_dir = Path(raw_temp_dir)
+            etc_dir = temp_dir / "etc"
+            etc_dir.mkdir()
+            repo_file = etc_dir / "getpagespeed-extras-plesk.repo"
+            repo_file.write_text(
+                "[getpagespeed-extras-plesk]\n"
+                "baseurl=https://extras.getpagespeed.com/redhat/9/plesk/x86_64/\n"
+                "enabled=1\n"
+                "exclude=sw-nginx plesk-libstdc++*\n"
+                "priority=9\n"
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "RPMBUILDER_HELPERS_ONLY": "1",
+                    "RPMBUILDER_REPO_ETC_DIR": str(etc_dir),
+                    "RPMBUILDER_REPO_SHARE_DIR": str(temp_dir / "no-share"),
+                }
+            )
+            result = subprocess.run(
+                [
+                    "bash",
+                    "-c",
+                    'source "$1"; '
+                    'strip_client_excludes getpagespeed-extras-plesk "$2"',
+                    "test-repo-bootstrap",
+                    str(self.build_script),
+                    str(etc_dir),
+                ],
+                capture_output=True,
+                env=env,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            stripped = repo_file.read_text()
+            self.assertNotIn("exclude=", stripped)
+            self.assertIn("enabled=1", stripped)
+            self.assertIn("priority=9", stripped)
+
 
 if __name__ == "__main__":
     unittest.main()

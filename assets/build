@@ -95,6 +95,23 @@ adopt_repo_section_from_rpmnew() {
   return 1
 }
 
+strip_client_excludes() {
+  # Channel templates carry client-protection excludes: the plesk channel
+  # excludes sw-nginx + plesk-libstdc++* so a customer's dnf can never
+  # downgrade Plesk's own nginx to our build-dependency mirror of it. The
+  # build container is the intended consumer of those mirrored packages —
+  # builddep must be able to install them, so drop every exclude= from the
+  # file defining the requested channel.
+  local repo_id=$1
+  local dir=$2
+  local repo_file
+  if repo_file=$(repo_definition_file "${repo_id}" "${dir}"); then
+    # No `sed -i`: BSD sed (macOS test runs) needs a suffix argument there.
+    sed '/^exclude=/d' "${repo_file}" > "${repo_file}.stripped" &&
+      mv -f "${repo_file}.stripped" "${repo_file}"
+  fi
+}
+
 ensure_requested_repo_definition() {
   local repo_id=$1
   local rhel=$2
@@ -208,6 +225,7 @@ if [[ -n ${ENABLE_REPOS} ]]; then
   # Refresh the narrowly scoped release package when a newly introduced
   # channel is absent from an older builder image, then install its definition.
   ensure_requested_repo_definition "${ENABLE_REPOS}" "${RHEL}"
+  strip_client_excludes "${ENABLE_REPOS}" "${RPMBUILDER_REPO_ETC_DIR:-/etc/yum.repos.d}"
   if command -v dnf5 > /dev/null 2>&1; then
     dnf5 config-manager setopt "${ENABLE_REPOS}".enabled=1
   elif [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then  # if more than 0 and less or equal than 7
