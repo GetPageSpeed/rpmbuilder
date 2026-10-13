@@ -13,23 +13,9 @@ if command -v curl >/dev/null 2>&1; then
   curl -s https://ifconfig.me/ip || true
 fi
 
-# Retry function: tries a command multiple times
-retry() {
-    local -r max_attempts="$1"
-    shift
-    local attempt=1
-    while (( attempt <= max_attempts )); do
-        echo "Attempt ${attempt} to run: $*"
-        if "$@"; then
-            return 0
-        fi
-        echo "Attempt ${attempt} failed. Waiting 5 seconds before retry..."
-        sleep 5
-        ((attempt++))
-    done
-    echo "All ${max_attempts} attempts failed for: $*"
-    return 1
-}
+# retry() + EL mirror-pool recovery (metadata refresh, origin fallback)
+# shellcheck source=pkg-resilience.sh
+. "$(dirname "$0")/pkg-resilience.sh"
 
 # openSUSE image-build resilience against mirror-pool lag.
 #
@@ -48,7 +34,7 @@ retry() {
 # land on a lagging mirror, and retries. It stays on the fallback for the rest of
 # the build; suse_restore_cdn (end of this script) restores cdn so the SHIPPED
 # image keeps the fast pool + baked metadata cache and takes no hard dependency
-# on any single third-party mirror. Non-openSUSE distros just get the retry.
+# on any single third-party mirror. EL distros get the origin fallback in retry().
 SUSE_FALLBACK_MIRROR="https://mirror.fcix.net/opensuse"
 SUSE_ON_FALLBACK=0
 install_pkgs() {
@@ -76,7 +62,9 @@ install_pkgs() {
         retry 3 ${INSTALLER} "$@"
         return $?
     fi
-    return 1
+    # Elsewhere keep going: retry() has by now refreshed metadata and moved EL
+    # vendor repos to their origin, so these attempts can actually succeed.
+    retry 3 ${INSTALLER} "$@"
 }
 suse_restore_cdn() {
     if [ "${SUSE_ON_FALLBACK}" = "1" ]; then
@@ -247,6 +235,10 @@ fi
 install_pkgs ${PRE_PACKAGES}
 
 install_pkgs ${PACKAGES}
+
+# Heavy installs are done: put EL vendor repos back on the mirror pool before
+# config-manager rewrites any repo file, so the shipped image never pins origin.
+el_restore_mirrorlist
 
 ln -sf "${RPM_BUILD_DIR}" /root/rpmbuild
 mkdir -p "${SOURCES}" "${WORKSPACE}" "${OUTPUT}" "${RPM_BUILD_DIR}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}

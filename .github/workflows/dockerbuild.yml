@@ -14,7 +14,7 @@ jobs:
        uses: actions/checkout@v5
      - name: Set matrix data
        id: set-matrix
-       run: echo "matrix=$(jq -c . < ./distro_versions.json)" >> $GITHUB_OUTPUT
+       run: echo "matrix=$(jq -c . < ./distro_versions.json)" >> "$GITHUB_OUTPUT"
   build:
     runs-on: ubuntu-latest
     needs: configure
@@ -52,24 +52,43 @@ jobs:
           exit 1
 
       - name: Build And Push Docker Image with Retry
+        id: build
         run: |
-          MAX_ATTEMPTS=10
+          # setup.sh already recovers from mirror-pool lag inside each attempt
+          # (metadata refresh + EL origin fallback), so few outer attempts suffice.
+          MAX_ATTEMPTS=4
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "Attempt $attempt of $MAX_ATTEMPTS: Building Docker image..."
-            ./crypt-keeper.sh build ${{ matrix.os }} ${{ matrix.version }} && break
-            EXIT_CODE=$?
-            echo "Attempt $attempt failed with exit code $EXIT_CODE."
-            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
-              echo "Retrying in 30 seconds..."
-              sleep 30
-            else
-              echo "All $MAX_ATTEMPTS attempts failed."
-              exit $EXIT_CODE
+            if ./crypt-keeper.sh build ${{ matrix.os }} ${{ matrix.version }}; then
+              echo "built=true" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
-          done        
+            echo "Attempt $attempt failed."
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "Retrying in 60 seconds..."
+              sleep 60
+            fi
+          done
+          echo "All $MAX_ATTEMPTS attempts failed."
+          echo "built=false" >> "$GITHUB_OUTPUT"
+          # Scheduled rebuilds run every 6h and a failure leaves the previous
+          # image serving. Only alert once the published image is genuinely stale,
+          # so a transient upstream outage never pages anyone. Push and manual
+          # runs always fail hard: those validate a code change.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            IMAGE="getpagespeed/rpmbuilder:${{ matrix.os }}-${{ matrix.version }}"
+            if python3 ci/image_freshness.py "$IMAGE" --max-age-hours 24; then
+              echo "::warning::${IMAGE} rebuild failed (likely upstream); published image is still fresh, not alerting"
+              exit 0
+            fi
+            echo "::error::${IMAGE} has not been rebuilt for over 24h"
+          fi
+          exit 1
 
       - name: Test RPM Build using the image
+        if: steps.build.outputs.built == 'true'
         run: ./crypt-keeper.sh test ${{ matrix.os }} ${{ matrix.version }}
 
       - name: Push to Docker Hub
+        if: steps.build.outputs.built == 'true'
         run: ./crypt-keeper.sh push ${{ matrix.os }} ${{ matrix.version }}
