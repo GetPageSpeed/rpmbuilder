@@ -77,6 +77,55 @@ class RepoBootstrapTest(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("Requested repository definition is unavailable", result.stderr)
 
+    def copy_template(self, temp_dir: Path, amzn: str) -> str:
+        """Install the php72 template from the share dir with a given %amzn."""
+        etc_dir = temp_dir / "etc"
+        share_dir = temp_dir / "share"
+        etc_dir.mkdir()
+        share_dir.mkdir()
+        (share_dir / "getpagespeed-extras-php72.repo").write_text(
+            "[getpagespeed-extras-php72]\n"
+            "name=GetPageSpeed PHP 7.2 packages for Enterprise Linux 7 - $basearch\n"
+            "baseurl=https://extras.getpagespeed.com/redhat/$releasever/php72/$basearch/\n"
+        )
+        env = os.environ.copy()
+        env.update(
+            {
+                "RPMBUILDER_HELPERS_ONLY": "1",
+                "RPMBUILDER_REPO_ETC_DIR": str(etc_dir),
+                "RPMBUILDER_REPO_SHARE_DIR": str(share_dir),
+                "RPMBUILDER_AMZN": amzn,
+            }
+        )
+        result = subprocess.run(
+            [
+                "bash",
+                "-c",
+                'source "$1"; ensure_requested_repo_definition getpagespeed-extras-php72 7',
+                "test-repo-bootstrap",
+                str(self.build_script),
+            ],
+            capture_output=True,
+            env=env,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return (etc_dir / "getpagespeed-extras-php72.repo").read_text()
+
+    def test_template_copy_is_rendered_for_amazon_linux(self) -> None:
+        """Amazon Linux builders get /amzn/ paths, not the EL template's 404."""
+        with tempfile.TemporaryDirectory() as raw_temp_dir:
+            repo = self.copy_template(Path(raw_temp_dir), "2")
+            self.assertIn("/amzn/$releasever/php72/$basearch/", repo)
+            self.assertNotIn("/redhat/", repo)
+            self.assertIn("for Amazon Linux 7", repo)
+
+    def test_template_copy_is_verbatim_on_el(self) -> None:
+        """EL builders keep the template unchanged."""
+        with tempfile.TemporaryDirectory() as raw_temp_dir:
+            repo = self.copy_template(Path(raw_temp_dir), "")
+            self.assertIn("/redhat/$releasever/php72/$basearch/", repo)
+
     def test_section_inside_shared_repo_file_is_recognized(self) -> None:
         """Channels defined as [sections] of a shared file need no refresh.
 

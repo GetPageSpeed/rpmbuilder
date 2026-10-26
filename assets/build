@@ -144,6 +144,14 @@ ensure_requested_repo_definition() {
   if ! repo_definition_file "${repo_id}" "${etc_dir}" >/dev/null; then
     if src=$(repo_definition_file "${repo_id}" "${share_dir}"); then
       cp "${src}" "${etc_dir}/"
+      # Templates carry EL paths; Amazon Linux serves /amzn/ (the same
+      # rewrite the release package's configure-repos.sh applies).
+      local amzn="${RPMBUILDER_AMZN-$(rpm -E '%{?amzn}' 2>/dev/null)}"
+      if [[ $amzn =~ ^[0-9]+$ ]]; then
+        local dst="${etc_dir}/$(basename "${src}")"
+        sed -e 's@/redhat/@/amzn/@g' -e 's@Enterprise Linux@Amazon Linux@g' \
+          "${src}" > "${dst}"
+      fi
     fi
   fi
 
