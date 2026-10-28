@@ -20,7 +20,14 @@
                 9,
                 10
             ],
+            "opt_in_versions": [
+                6
+            ],
             "version_overrides": {
+                "6": {
+                    "docker": "centos",
+                    "packager": "yum"
+                },
                 "7": {
                     "docker": "centos",
                     "packager": "yum"
