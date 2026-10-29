@@ -134,9 +134,15 @@ function build() {
     OUT_DIR=${OUT_DIR-$(pwd)/out}
     MAIN_TAG="$(docker-image-name "${DISTRO}" "${VERSION}")"
     ALT_TAG="$(docker-image-alt-name "${DISTRO}" "${VERSION}")"
+    PLATFORMS="linux/amd64,linux/arm64"
+    # CentOS 6 never shipped aarch64 (centos:6 is amd64-only); el6 is an
+    # opt-in EOL lane built only on x86_64 hosts.
+    if [[ "${DISTRO}" = "centos" ]] && [[ "${VERSION}" -eq 6 ]]; then
+      PLATFORMS="linux/amd64"
+    fi
     # Ensure buildx is set up and ready for multi-architecture builds
     docker buildx create --use --name multiarch-builder --driver docker-container || true
-    cd "${OUT_DIR}/${DISTRO}/${VERSION}" && docker buildx build --platform linux/amd64,linux/arm64 --push -t "${MAIN_TAG}" -t "${ALT_TAG}" .
+    cd "${OUT_DIR}/${DISTRO}/${VERSION}" && docker buildx build --platform "${PLATFORMS}" --push -t "${MAIN_TAG}" -t "${ALT_TAG}" .
     cd -
 }
 

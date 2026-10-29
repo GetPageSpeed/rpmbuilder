@@ -161,6 +161,112 @@ ensure_requested_repo_definition() {
   fi
 }
 
+# Query a spec's binary package headers. rpmspec arrived in rpm 4.9; EL6
+# ships rpm 4.8, whose `rpm -q --specfile` takes the same --qf and lists
+# the same packages. Without this the published-NVR short-circuit cannot
+# parse any spec on el6 and every push rebuilds and redeploys.
+spec_query() {
+    if command -v rpmspec > /dev/null 2>&1; then
+        rpmspec -q "$@"
+    else
+        rpm -q --specfile "$@"
+    fi
+}
+
+# Universal wrapper function for repoquery across different RHEL/CentOS versions
+universal_repoquery() {
+    local package=$1
+
+    # Check if dnf or repoquery is available
+    if command -v dnf > /dev/null 2>&1; then
+        # RHEL 8+ and Fedora
+        dnf repoquery -q "${package}"
+    elif command -v repoquery > /dev/null 2>&1; then
+        # RHEL 7 and below
+        repoquery -q "${package}"
+    else
+        # If neither is available, return empty (indicating no packages found)
+        echo ""
+    fi
+}
+
+# Function to check if all packages from a spec file are present in the repository
+check_packages_in_repo() {
+    local spec_file=$1
+
+    # Special handling for openSUSE/SLES builder images where zypper has full
+    # visibility into SLES repos and dnf repoquery does not.
+    if [[ "${ID-}" = "opensuse-leap" ]] && command -v zypper > /dev/null 2>&1; then
+        local lines
+        if ! lines=$(spec_query --qf '%{NAME}|%{EPOCH}|%{VERSION}|%{RELEASE}\n' "${spec_file}" 2>/dev/null); then
+            echo "Failed to parse spec file ${spec_file}"
+            return 1
+        fi
+
+        while IFS='|' read -r name epoch version release; do
+            # Skip empty lines (can happen at EOF)
+            [[ -z "$name" ]] && continue
+
+            # Normalise epoch; ignore (none)
+            local evr
+            if [[ -z "$epoch" || "$epoch" == "(none)" ]]; then
+                evr="${version}-${release}"
+            else
+                evr="${epoch}:${version}-${release}"
+            fi
+
+            # Use zypper search without refreshing metadata; match exact name and VERSION-RELEASE.
+            # Example row:
+            #   | firewalld-ipset-braintree | package | 20250809-1.sles16 | noarch | GetPageSpeed ...
+            local match
+            match=$(zypper --non-interactive --no-refresh search -s -x "$name" 2>/dev/null | \
+                awk -v want_name="$name" -v want_evr="$evr" '
+                    $2 == want_name && $6 == want_evr { print $0 }
+                ')
+            if [[ -z "$match" ]]; then
+                echo "Package ${name}-${evr} is NOT present in the repository."
+                return 1
+            fi
+        done <<< "$lines"
+
+        echo "All packages from ${spec_file} are present in the repository."
+        return 0
+    fi
+
+    # Default behaviour for non-SLES: use repoquery via the universal wrapper
+    # Generate the list of packages from the .spec file
+    # Query and strip in two steps: in a `$(query | sed)` pipeline the `if !`
+    # would only see sed's status, so a spec parse failure read as "nothing
+    # to check" instead of falling through to a build.
+    local packages
+    if ! packages=$(spec_query --qf '%{NAME}-%{EPOCH}:%{VERSION}-%{RELEASE}.*\n' "${spec_file}"); then
+        echo "Failed to parse spec file ${spec_file}"
+        return 1
+    fi
+    packages=$(sed 's/(none)://g' <<< "${packages}")
+
+    # Loop through each package and check if it exists in the repository
+    for package in $packages; do
+        # Use the universal_repoquery function to check if the package is present
+        local result
+
+        if ! result=$(universal_repoquery "${package}"); then
+            echo "Error while checking for package ${package} in the repository."
+            return 1
+        fi
+
+        # If the result is empty, it means the package is NOT present
+        if [[ -z "${result}" ]]; then
+            echo "Package ${package} is NOT present in the repository."
+            return 1  # Exit with code 1 if any package is missing
+        fi
+    done
+
+    # If all packages are present
+    echo "All packages from ${spec_file} are present in the repository."
+    return 0  # Exit with code 0 if all packages are present
+}
+
 # Unit tests source this file only to exercise helpers above.
 if [[ "${RPMBUILDER_HELPERS_ONLY:-0}" == "1" ]]; then
   if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
@@ -379,96 +485,6 @@ zypper_builddep() {
     echo "zypper failed to install some build dependencies for ${spec_file}"
     return 1
   fi
-}
-
-# Universal wrapper function for repoquery across different RHEL/CentOS versions
-universal_repoquery() {
-    local package=$1
-
-    # Check if dnf or repoquery is available
-    if command -v dnf > /dev/null 2>&1; then
-        # RHEL 8+ and Fedora
-        dnf repoquery -q "${package}"
-    elif command -v repoquery > /dev/null 2>&1; then
-        # RHEL 7 and below
-        repoquery -q "${package}"
-    else
-        # If neither is available, return empty (indicating no packages found)
-        echo ""
-    fi
-}
-
-# Function to check if all packages from a spec file are present in the repository
-check_packages_in_repo() {
-    local spec_file=$1
-
-    # Special handling for openSUSE/SLES builder images where zypper has full
-    # visibility into SLES repos and dnf repoquery does not.
-    if [[ "${ID-}" = "opensuse-leap" ]] && command -v zypper > /dev/null 2>&1; then
-        local lines
-        if ! lines=$(rpmspec -q --qf '%{NAME}|%{EPOCH}|%{VERSION}|%{RELEASE}\n' "${spec_file}" 2>/dev/null); then
-            echo "Failed to parse spec file ${spec_file}"
-            return 1
-        fi
-
-        while IFS='|' read -r name epoch version release; do
-            # Skip empty lines (can happen at EOF)
-            [[ -z "$name" ]] && continue
-
-            # Normalise epoch; ignore (none)
-            local evr
-            if [[ -z "$epoch" || "$epoch" == "(none)" ]]; then
-                evr="${version}-${release}"
-            else
-                evr="${epoch}:${version}-${release}"
-            fi
-
-            # Use zypper search without refreshing metadata; match exact name and VERSION-RELEASE.
-            # Example row:
-            #   | firewalld-ipset-braintree | package | 20250809-1.sles16 | noarch | GetPageSpeed ...
-            local match
-            match=$(zypper --non-interactive --no-refresh search -s -x "$name" 2>/dev/null | \
-                awk -v want_name="$name" -v want_evr="$evr" '
-                    $2 == want_name && $6 == want_evr { print $0 }
-                ')
-            if [[ -z "$match" ]]; then
-                echo "Package ${name}-${evr} is NOT present in the repository."
-                return 1
-            fi
-        done <<< "$lines"
-
-        echo "All packages from ${spec_file} are present in the repository."
-        return 0
-    fi
-
-    # Default behaviour for non-SLES: use repoquery via the universal wrapper
-    # Generate the list of packages from the .spec file
-    local packages
-    if ! packages=$(rpmspec -q --qf '%{NAME}-%{EPOCH}:%{VERSION}-%{RELEASE}.*\n' "${spec_file}" | sed 's/(none)://g'); then
-        echo "Failed to parse spec file ${spec_file}"
-        return 1
-    fi
-
-    # Loop through each package and check if it exists in the repository
-    for package in $packages; do
-        # Use the universal_repoquery function to check if the package is present
-        local result
-
-        if ! result=$(universal_repoquery "${package}"); then
-            echo "Error while checking for package ${package} in the repository."
-            return 1
-        fi
-
-        # If the result is empty, it means the package is NOT present
-        if [[ -z "${result}" ]]; then
-            echo "Package ${package} is NOT present in the repository."
-            return 1  # Exit with code 1 if any package is missing
-        fi
-    done
-
-    # If all packages are present
-    echo "All packages from ${spec_file} are present in the repository."
-    return 0  # Exit with code 0 if all packages are present
 }
 
 # define function to build a single spec file
