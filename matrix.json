@@ -143,6 +143,7 @@
                     "description": "EDGE",
                     "enable_repos": "getpagespeed-extras-edge",
                     "only_dists": [
+                        "el7",
                         "el8",
                         "el9",
                         "el10"

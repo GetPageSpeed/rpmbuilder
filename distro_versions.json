@@ -17,6 +17,10 @@
             "version": 10
         },
         {
+            "os": "centos",
+            "version": 6
+        },
+        {
             "os": "fedora",
             "version": 44
         },
