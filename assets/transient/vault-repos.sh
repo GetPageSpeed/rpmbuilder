@@ -8,7 +8,14 @@
 # other mirror" had nowhere to go. Cloudflare stays first (fast, cached); the
 # rest are independent non-CF mirrors of the same frozen trees.
 #
-# Usage: vault-repos.sh [base|scl|epel|all]   (default: all)
+# Amazon Linux 2 (reports %rhel 7) gets the SCLo files only: its base repos
+# are its own, and its EPEL metalink already fails over. The SCLo files come
+# from our centos-release-scl*.amzn2 and point at the dead mirrorlist.centos.org.
+#
+# `check` fails when an enabled repo still uses a dead centos.org mirror host,
+# so a missed rewrite surfaces in a second instead of after minutes of retries.
+#
+# Usage: vault-repos.sh [base|scl|epel|all|check]   (default: all)
 # Test overrides: VAULT_REPO_DIR, VAULT_RHEL, VAULT_ARCH, VAULT_AMZN.
 set -eu
 
@@ -20,10 +27,38 @@ AMZN=${VAULT_AMZN:-$(rpm -E '0%{?amzn}')}
 AMZN=$((10#${AMZN}))
 ARCH=${VAULT_ARCH:-$(uname -m)}
 
-# Amazon Linux 2 also reports %rhel 7 but has its own repos.
-if ((AMZN > 0)) || ((RHEL != 6 && RHEL != 7)); then
+# Amazon Linux 2023+ and non-EL6/7 have live repos of their own.
+if ((AMZN > 2)) || ((RHEL != 6 && RHEL != 7)); then
     exit 0
 fi
+
+# Enabled repo sections still pointing at mirror(list).centos.org, which
+# no longer resolve. Prints "file [section]" per hit, exits 1 on any.
+check_dead() {
+    local f bad=0
+    for f in "${REPO_DIR}"/*.repo; do
+        [ -f "$f" ] || continue
+        awk -v file="$f" '
+            function flush() {
+                if (dead && enabled != "0") { print file " [" section "]"; found = 1 }
+            }
+            /^[[:space:]]*\[.*\][[:space:]]*$/ {
+                flush(); section = $0; gsub(/^[[:space:]]*\[|\][[:space:]]*$/, "", section)
+                dead = 0; enabled = "1"; next
+            }
+            /^[[:space:]]*[#;]/ { next }
+            /^[[:space:]]*enabled[[:space:]]*=/ {
+                v = $0; sub(/^[^=]*=[[:space:]]*/, "", v); sub(/[[:space:]]*$/, "", v); enabled = v; next
+            }
+            /mirror(list)?\.centos\.org/ { dead = 1 }
+            END { flush(); exit found ? 1 : 0 }
+        ' "$f" || bad=1
+    done
+    if ((bad)); then
+        echo "vault-repos.sh: enabled repos above use dead mirror(list).centos.org" >&2
+        return 1
+    fi
+}
 
 # Same frozen tree on every mirror, laid out like vault.centos.org.
 # vault.getpagespeed.com serves a local copy when present, else 302s to
@@ -123,10 +158,18 @@ write_epel() {
     } > "${REPO_DIR}/epel.repo"
 }
 
+if ((AMZN == 2)); then
+    case "$WHAT" in
+        base|epel) exit 0 ;;
+        all) WHAT=scl ;;
+    esac
+fi
+
 case "$WHAT" in
     base) write_base ;;
     scl) write_scl ;;
     epel) write_epel ;;
     all) write_base; write_scl; write_epel ;;
-    *) echo "usage: $0 [base|scl|epel|all]" >&2; exit 2 ;;
+    check) check_dead ;;
+    *) echo "usage: $0 [base|scl|epel|all|check]" >&2; exit 2 ;;
 esac

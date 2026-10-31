@@ -89,10 +89,63 @@ class VaultReposTest(unittest.TestCase):
         self.assertEqual(self.render("07", "x86_64").returncode, 0)
         self.assertTrue((self.tmp / "CentOS-Base.repo").exists())
 
-    def test_amazon_linux_and_other_els_untouched(self) -> None:
-        for rhel, amzn in (("7", "2"), ("8", "0"), ("0", "0")):
+    def test_amazon_linux_2_gets_sclo_only(self) -> None:
+        # Regression: 405ad29 skipped amzn2 entirely, leaving our
+        # centos-release-scl*.amzn2 files on the dead mirrorlist.centos.org.
+        for arch, path in (("x86_64", "/7.9.2009/sclo/$basearch/rh/"),
+                           ("aarch64", "/altarch/7.9.2009/sclo/$basearch/rh/")):
+            for f in self.tmp.iterdir():
+                f.unlink()
+            self.assertEqual(self.render("7", arch, "2").returncode, 0)
+            self.assertEqual(sorted(p.name for p in self.tmp.iterdir()),
+                             ["CentOS-SCLo-scl-rh.repo", "CentOS-SCLo-scl.repo"])
+            self.assertEqual(self.baseurls("CentOS-SCLo-scl-rh.repo", "centos-sclo-rh")[0],
+                             "https://vault.epel.cloud" + path)
+            self.assertEqual(self.render("7", arch, "2", what="check").returncode, 0)
+        for what in ("base", "epel"):
+            for f in self.tmp.iterdir():
+                f.unlink()
+            self.assertEqual(self.render("7", "x86_64", "2", what=what).returncode, 0)
+            self.assertEqual(list(self.tmp.iterdir()), [])
+
+    def test_other_distros_untouched(self) -> None:
+        for rhel, amzn in (("7", "2023"), ("8", "0"), ("0", "0")):
             self.assertEqual(self.render(rhel, "x86_64", amzn).returncode, 0)
         self.assertEqual(list(self.tmp.iterdir()), [])
+
+    def test_check_passes_on_generated_repos(self) -> None:
+        self.assertEqual(self.render("7", "x86_64").returncode, 0)
+        self.assertEqual(self.render("7", "x86_64", what="check").returncode, 0)
+
+    def test_check_flags_enabled_dead_mirrorlist(self) -> None:
+        # Shape of the stock centos-release-scl-rh repo file.
+        (self.tmp / "CentOS-SCLo-scl-rh.repo").write_text(
+            "[centos-sclo-rh]\n"
+            "name=CentOS-7 - SCLo rh\n"
+            "#baseurl=http://mirror.centos.org/centos/7/sclo/$basearch/rh/\n"
+            "mirrorlist=http://mirrorlist.centos.org?arch=$basearch&release=7&repo=sclo-rh\n"
+            "gpgcheck=1\n"
+            "enabled=1\n"
+            "\n"
+            "[centos-sclo-rh-testing]\n"
+            "baseurl=http://buildlogs.centos.org/centos/7/sclo/$basearch/rh/\n"
+            "enabled=0\n")
+        r = self.render("7", "x86_64", what="check")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("[centos-sclo-rh]", r.stdout)
+        self.assertNotIn("testing", r.stdout)
+
+    def test_check_ignores_disabled_and_commented(self) -> None:
+        (self.tmp / "CentOS-Sources.repo").write_text(
+            "[base-source]\n"
+            "baseurl=http://vault.centos.org/centos/$releasever/os/Source/\n"
+            "#mirrorlist=http://mirrorlist.centos.org/?release=7\n"
+            "enabled=1\n"
+            "\n"
+            "[updates-source]\n"
+            "mirrorlist=http://mirrorlist.centos.org/?release=7\n"
+            "enabled = 0\n")
+        self.assertEqual(self.render("7", "x86_64", what="check").returncode, 0)
 
     def test_subcommands_write_only_their_files(self) -> None:
         self.assertEqual(self.render("6", "x86_64", what="scl").returncode, 0)
@@ -102,6 +155,7 @@ class VaultReposTest(unittest.TestCase):
 
     def test_image_build_wires_the_writer(self) -> None:
         self.assertIn("vault-repos.sh all", FIX_REPOS.read_text())
+        self.assertIn("vault-repos.sh check || exit 1", FIX_REPOS.read_text())
         setup = SETUP.read_text()
         self.assertNotIn("getpagespeed.com/files/centos6", setup)
         for what in ("base", "scl", "epel"):

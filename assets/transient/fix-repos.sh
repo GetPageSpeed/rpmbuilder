@@ -22,9 +22,11 @@ echo "%dist .sles${SLES_MAJOR}" > /etc/rpm/macros.custom
 fi
 
 # EL6/EL7: frozen CentOS vault, SCLo and EPEL archive repos get a multi-mirror
-# baseurl list with Cloudflare first (vault-repos.sh skips Amazon Linux 2).
+# baseurl list with Cloudflare first (Amazon Linux 2: SCLo only). Then fail
+# fast if any enabled repo is still on the dead mirror(list).centos.org.
 if ((RHEL == 6 || RHEL == 7)); then
   "$(dirname "$0")"/vault-repos.sh all
+  "$(dirname "$0")"/vault-repos.sh check || exit 1
 fi
 
 if ((RHEL > 0 && RHEL <= 7)); then
