@@ -53,18 +53,20 @@ class VaultReposTest(unittest.TestCase):
                 urls = self.baseurls(name, section)
                 self.assertGreaterEqual(len(urls), 5, (name, section))
                 self.assertEqual(len(set(urls)), len(urls))
-                # Cloudflare front first, our own slot second, rest non-CF.
+                # Cloudflare front first, the rest independent non-CF mirrors.
+                # vault.getpagespeed.com is the extras failover alias, not a
+                # CentOS/EPEL mirror: it must not appear here.
                 self.assertRegex(urls[0], r"^https://(vault|archive)\.epel\.cloud/")
-                self.assertTrue(urls[1].startswith("https://vault.getpagespeed.com/"))
-                for url in urls[2:]:
+                for url in urls[1:]:
                     self.assertNotIn("epel.cloud", url)
+                    self.assertNotIn("getpagespeed.com", url)
 
     def test_el7_x86_64(self) -> None:
         self.assert_failover("7", "x86_64")
         urls = self.baseurls("CentOS-Base.repo", "base")
         self.assertEqual(urls[0], "https://vault.epel.cloud/7.9.2009/os/$basearch/")
         self.assertIn("https://vault.centos.org/7.9.2009/os/$basearch/", urls)
-        self.assertEqual(self.baseurls("CentOS-SCLo-scl-rh.repo", "centos-sclo-rh")[2],
+        self.assertEqual(self.baseurls("CentOS-SCLo-scl-rh.repo", "centos-sclo-rh")[1],
                          "https://ftp.iij.ad.jp/pub/linux/centos-vault/7.9.2009/sclo/$basearch/rh/")
         self.assertEqual(self.baseurls("epel.repo", "epel")[0],
                          "https://archive.epel.cloud/pub/archive/epel/7/$basearch")
@@ -83,7 +85,7 @@ class VaultReposTest(unittest.TestCase):
         self.assert_failover("6", "x86_64")
         self.assertEqual(self.baseurls("CentOS-Base.repo", "updates")[0],
                          "https://vault.epel.cloud/6.10/updates/$basearch/")
-        self.assertTrue(self.baseurls("epel.repo", "epel")[3].endswith("/epel/6/$basearch"))
+        self.assertTrue(self.baseurls("epel.repo", "epel")[2].endswith("/epel/6/$basearch"))
 
     def test_rpm_style_zero_padded_rhel(self) -> None:
         self.assertEqual(self.render("07", "x86_64").returncode, 0)

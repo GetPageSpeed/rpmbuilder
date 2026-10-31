@@ -61,10 +61,7 @@ check_dead() {
 }
 
 # Same frozen tree on every mirror, laid out like vault.centos.org.
-# vault.getpagespeed.com serves a local copy when present, else 302s to
-# vault.centos.org: the slot for a mirror of our own, already in every client.
 CENTOS_MIRRORS="https://vault.epel.cloud
-https://vault.getpagespeed.com
 https://ftp.iij.ad.jp/pub/linux/centos-vault
 https://archive.kernel.org/centos-vault
 https://mirror.nsc.liu.se/centos-store
@@ -73,7 +70,6 @@ https://vault.centos.org"
 
 # Laid out like archives.fedoraproject.org/pub/archive/epel.
 EPEL_MIRRORS="https://archive.epel.cloud/pub/archive/epel
-https://vault.getpagespeed.com/pub/archive/epel
 https://ftp.iij.ad.jp/pub/linux/Fedora/archive/epel
 https://archives.fedoraproject.org/pub/archive/epel
 https://mirror.math.princeton.edu/pub/fedora-archive/epel
