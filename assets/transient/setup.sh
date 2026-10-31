@@ -181,15 +181,15 @@ fi
 
 
 if [[ $RHEL == 6 ]]; then
-  curl https://www.getpagespeed.com/files/centos6-eol.repo --output /etc/yum.repos.d/CentOS-Base.repo
+  # Multi-mirror vault/EPEL-archive repo files (also rewritten by fix-repos.sh)
+  "$(dirname "$0")"/vault-repos.sh base
   rpm --rebuilddb && yum -y install yum-plugin-ovl
   yum -y install yum-plugin-ovl
   yum -y install centos-release-scl
-  curl https://www.getpagespeed.com/files/centos6-scl-eol.repo --output /etc/yum.repos.d/CentOS-SCLo-scl.repo
-  curl https://www.getpagespeed.com/files/centos6-scl-rh-eol.repo --output /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+  "$(dirname "$0")"/vault-repos.sh scl
 
   yum -y install epel-release
-  curl https://www.getpagespeed.com/files/centos6-epel-eol.repo --output /etc/yum.repos.d/epel.repo
+  "$(dirname "$0")"/vault-repos.sh epel
 fi
 
 if (( RHEL >= 8 )); then

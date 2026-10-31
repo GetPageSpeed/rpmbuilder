@@ -21,20 +21,10 @@ SLES_MAJOR=${SLES::-2}
 echo "%dist .sles${SLES_MAJOR}" > /etc/rpm/macros.custom
 fi
 
-# if RHEL exactly 7, fix SCLO repos:
-if ((RHEL == 7)); then
-  # disable mirrorlist, enable and replace entire line with baseurl (only one line in the file):
-  VAULT_VER="7.9.2009"
-  ARCH=$(/bin/arch)
-  SCLO_BASE_NEW_URL="https://vault.epel.cloud/${VAULT_VER}/sclo/${ARCH}/sclo/"
-  sed -i.orig -e '/mirrorlist=/d' \
-    -e "0,/baseurl=/s@.*baseurl=.*@baseurl=${SCLO_BASE_NEW_URL}@" \
-    /etc/yum.repos.d/CentOS-SCLo-scl.repo
-  SCLO_RH_NEW_URL="https://vault.epel.cloud/${VAULT_VER}/sclo/${ARCH}/rh/"
-  echo "New SCLO RH URL: ${SCLO_RH_NEW_URL}"
-  sed -i.orig -e '/mirrorlist=/d' \
-    -e "0,/^#\?baseurl=/s@^#\?baseurl=.*@baseurl=${SCLO_RH_NEW_URL}@" \
-    /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+# EL6/EL7: frozen CentOS vault, SCLo and EPEL archive repos get a multi-mirror
+# baseurl list with Cloudflare first (vault-repos.sh skips Amazon Linux 2).
+if ((RHEL == 6 || RHEL == 7)); then
+  "$(dirname "$0")"/vault-repos.sh all
 fi
 
 if ((RHEL > 0 && RHEL <= 7)); then
