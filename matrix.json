@@ -71,12 +71,15 @@
             "description": "SUSE Linux Enterprise",
             "human_label": "SLES / openSUSE Leap",
             "os_versions": 1,
+            "retired": true,
+            "retired_versions": [
+                15,
+                16
+            ],
             "docker": "opensuse/leap",
             "rpmbuilder_name": "opensuse",
             "dir": "sles",
-            "versions": [
-                16
-            ]
+            "versions": []
         }
     },
     "collections": {
