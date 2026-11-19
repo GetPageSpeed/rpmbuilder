@@ -161,6 +161,48 @@ ensure_requested_repo_definition() {
   fi
 }
 
+enable_repo_id() {
+  local repo_id=$1
+  local rhel=$2
+  if command -v dnf5 > /dev/null 2>&1; then
+    dnf5 config-manager setopt "${repo_id}".enabled=1
+  elif [ "$rhel" -gt "0" ] && [ "$rhel" -le "7" ]; then  # if more than 0 and less or equal than 7
+    yum-config-manager --enable "${repo_id}"
+  else
+    dnf config-manager --set-enabled "${repo_id}"
+  fi
+}
+
+early_repo_ids() {
+  # Early twins of the channel a build resolves against. The base channel
+  # (no ENABLE_REPOS) has an arch and a noarch twin; a sub-channel keeps
+  # noarch packages in its arch dirs, so it has one twin, <id>-early.
+  local repo_id=$1
+  if [[ -z "${repo_id}" ]]; then
+    echo "getpagespeed-extras-early getpagespeed-extras-early-noarch"
+  else
+    echo "${repo_id}-early"
+  fi
+}
+
+enable_early_repos() {
+  # The nginx cohort is staged in the early channel: a new nginx base waits
+  # there until its modules are built, so module builds must resolve
+  # nginx-r<ver> from early. A channel without an early twin builds against
+  # its published channel only; that is not an error.
+  local repo_id=$1
+  local rhel=$2
+  local early_id
+  for early_id in $(early_repo_ids "${repo_id}"); do
+    if ensure_requested_repo_definition "${early_id}" "${rhel}" &&
+      enable_repo_id "${early_id}" "${rhel}"; then
+      echo "Enabled early repository: ${early_id}"
+    else
+      echo "No early repository ${early_id} here; building against the published channel only"
+    fi
+  done
+}
+
 # Query a spec's binary package headers. rpmspec arrived in rpm 4.9; EL6
 # ships rpm 4.8, whose `rpm -q --specfile` takes the same --qf and lists
 # the same packages. Without this the published-NVR short-circuit cannot
@@ -340,13 +382,13 @@ if [[ -n ${ENABLE_REPOS} ]]; then
   # channel is absent from an older builder image, then install its definition.
   ensure_requested_repo_definition "${ENABLE_REPOS}" "${RHEL}"
   strip_client_excludes "${ENABLE_REPOS}" "${RPMBUILDER_REPO_ETC_DIR:-/etc/yum.repos.d}"
-  if command -v dnf5 > /dev/null 2>&1; then
-    dnf5 config-manager setopt "${ENABLE_REPOS}".enabled=1
-  elif [ "$RHEL" -gt "0" ] && [ "$RHEL" -le "7" ]; then  # if more than 0 and less or equal than 7
-    yum-config-manager --enable "${ENABLE_REPOS}"
-  else
-    dnf config-manager --set-enabled "${ENABLE_REPOS}"
-  fi
+  enable_repo_id "${ENABLE_REPOS}" "${RHEL}"
+fi
+
+# EARLY_REPOS=1 (nginx cohort lanes): also resolve against the early twin of
+# the effective channel, before the published-NVR check and builddep run.
+if [[ "${EARLY_REPOS:-0}" == "1" ]]; then
+  enable_early_repos "${ENABLE_REPOS:-}" "${RHEL}"
 fi
 
 # Use custom rpmlint config per repository, if such exists
